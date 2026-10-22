@@ -139,7 +139,38 @@ def home():
             ui.button("Save Card", on_click=save_card)
 
         dialog.open()
+        
+    # Delete an existing deck
+    def delete_deck():
+        if not decks:
+            ui.notify("No decks to delete", color="negative")
+            return
 
+        with ui.dialog() as dialog, ui.card():
+            ui.label("Delete Deck").classes("text-lg font-bold")
+
+            deck_select = ui.select(
+                list(decks.keys()),
+                label="Select Deck"
+            ).classes("w-full")
+
+            def confirm_delete():
+                if not deck_select.value:
+                    ui.notify("Please select a deck", color="negative")
+                    return
+
+                deck_name = deck_select.value
+                del decks[deck_name]
+
+                ui.notify(f"Deleted {deck_name}", color="positive")
+                dialog.close()
+                display_decks.refresh()
+
+            with ui.row():
+                ui.button("Cancel", on_click=dialog.close).props("flat")
+                ui.button("Delete", on_click=confirm_delete, color="negative")
+        dialog.open()
+  
     #import deck (format must be .txt or .md with each line as a flashcard)
     def import_deck():
 
@@ -202,6 +233,7 @@ def home():
         dialog.open()
 
         pass
+        
     with ui.row().classes("w-full justify-center no-wrap gap-0"):
 
         # Left sidebar
@@ -213,7 +245,9 @@ def home():
             )
 
             nav_button("Import deck", "upload_file").on_click(import_deck)
-            nav_button("Delete deck", "delete")
+            nav_button("Delete deck", "delete").on(
+                "click", delete_deck
+            )
 
             ui.button(
                 "Create deck",
