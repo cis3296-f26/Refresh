@@ -1,6 +1,6 @@
 
+from asyncio import events
 import os
-
 from nicegui import ui
 
 BLUE = "#1d9bf0"
@@ -16,6 +16,17 @@ def nav_button(label, icon):
         f"w-full text-sm font-semibold rounded-full px-3 py-1 text-[{TEXT}] "
         "hover:bg-[#e7e7e8] [&>.q-btn__content]:justify-start"
     )
+
+async def parse_deck(uploaded_file):
+    text_content = await uploaded_file.text()
+
+    for line in text_content.splitlines():
+        cleaned = line.strip()
+
+        if not cleaned or cleaned.startswith('#'):
+            continue
+        
+        yield cleaned
 
 
 @ui.page("/")
@@ -42,31 +53,33 @@ def home():
                         ui.label(
                             f"{len(decks[deck_name])} cards"
                         ).classes(f"text-sm text-[{MUTED}]")
+    #save deck
+    def save_deck(name, dialog):
+        deck_name = (name.value or "").strip()
+
+        if not deck_name:
+            ui.notify("Please enter a deck name", color="negative")
+            return
+
+        if deck_name in decks:
+            ui.notify("Deck already exists", color="negative")
+            return
+
+        decks[deck_name] = []
+        ui.notify("Deck created successfully!", color="positive")
+        dialog.close()
+        display_decks.refresh()
 
     # Create a new deck
-    def create_deck():
+    def create_deck(name=None):
         with ui.dialog() as dialog, ui.card():
             ui.label("Create a New Deck").classes("text-lg font-bold")
+            
+            if name:
+                name.set_text(name)
 
             name = ui.input("Deck Name").classes("w-full")
-
-            def save_deck():
-                deck_name = (name.value or "").strip()
-
-                if not deck_name:
-                    ui.notify("Please enter a deck name", color="negative")
-                    return
-
-                if deck_name in decks:
-                    ui.notify("Deck already exists", color="negative")
-                    return
-
-                decks[deck_name] = []
-                ui.notify("Deck created successfully!", color="positive")
-                dialog.close()
-                display_decks.refresh()
-
-            ui.button("Create", on_click=save_deck)
+            ui.button("Create", on_click=save_deck(name, dialog)).classes("w-full")
 
         dialog.open()
 
@@ -118,6 +131,28 @@ def home():
 
         dialog.open()
 
+    def import_deck():
+        with ui.dialog() as dialog, ui.card():
+            ui.label("Upload Deck Here: ")
+            
+        output_container = None
+        async def handle_upload(e: events.UploadEventArguments):
+            output_container.clear()
+
+            with output_container:
+                create_deck()
+            name.set_text(e.name)
+            dialog.close()
+            
+        ui.upload(on_upload = handle_upload, max_files= 1).props('accept=.md,.txt')
+
+        name = ui.input("Deck Name").classes("w-full")
+        save_deck(name,dialog)
+        ui.button("Create", on_click=save_deck)
+
+        save_deck()
+
+        pass
     with ui.row().classes("w-full justify-center no-wrap gap-0"):
 
         # Left sidebar
@@ -128,7 +163,7 @@ def home():
                 "click", add_card
             )
 
-            nav_button("Import deck", "upload_file")
+            nav_button("Import deck", "upload_file").on_click(import_deck)
             nav_button("Delete deck", "delete")
 
             ui.button(
@@ -148,7 +183,7 @@ def home():
 
             display_decks()
 
-
+    
 ui.run(
     title="Refresh",
     host="0.0.0.0",
