@@ -1,7 +1,7 @@
 
-from asyncio import events
 import os
-from nicegui import ui
+from anyio import Path
+from nicegui import ui, events
 
 BLUE = "#1d9bf0"
 TEXT = "#0f1419"
@@ -17,16 +17,25 @@ def nav_button(label, icon):
         "hover:bg-[#e7e7e8] [&>.q-btn__content]:justify-start"
     )
 
-async def parse_deck(uploaded_file):
-    text_content = await uploaded_file.text()
+async def parse_deck(uploaded_file) -> list[dict]:
+    content = await uploaded_file.text()
 
-    for line in text_content.splitlines():
+    cards = []
+    for line in content.splitlines():
         cleaned = line.strip()
 
         if not cleaned or cleaned.startswith('#'):
             continue
-        
-        yield cleaned
+
+        for delimiter in ('|', '\t', ',', ';', '::', ':'):
+            if delimiter in cleaned:
+                question, answer = cleaned.split(delimiter, 1)
+                q_clean, a_clean = question.strip(), answer.strip()
+                if q_clean and a_clean:
+                    cards.append({"question": q_clean, "answer": a_clean})
+                break
+
+    return cards
 
 
 @ui.page("/")
@@ -131,26 +140,66 @@ def home():
 
         dialog.open()
 
+    #import deck (format must be .txt or .md with each line as a flashcard)
     def import_deck():
-        with ui.dialog() as dialog, ui.card():
-            ui.label("Upload Deck Here: ")
+
+        parsed_cards: list[dict] = []
+
+        with ui.dialog() as dialog, ui.card().classes("w-96 gap-3"):
+            ui.label("Upload Deck Here: ").classes("text-lg font-bold")
+            ui.label("Upload a .md or .txt file with each line as a flashcard.").classes(f"text-[{MUTED}]")
+
+            name = ui.input("Deck Name").classes("w-full")
+            status_label = ui.label("No file uploaded yet").classes(f"text-sm text-[{MUTED}]")
+        
+            async def handle_upload(e: events.UploadEventArguments):
+                nonlocal parsed_cards
+
+                if not name.value:
+                    name.value = Path(e.file.name).stem
+
+                parsed_cards = await parse_deck(e.file)
+
+                if parsed_cards:
+                    status_label.set_text(f"Ready to import {len(parsed_cards)} cards.")
+                    status_label.classes(replace="text-sm text-green-600 font-medium")
+                else:
+                    status_label.set_text("No valid cards found in the uploaded file.")
+                    status_label.classes(replace="text-sm text-red-600 font-medium")
+                
+            ui.upload(on_upload = handle_upload, 
+                      auto_upload=True,
+                      max_files= 1
+                      ).props('accept=.md,.txt').classes("w-full")
             
-        output_container = None
-        async def handle_upload(e: events.UploadEventArguments):
-            output_container.clear()
+            def finalize_import():
+                deck_name = (name.value or "").strip()
+                if not name.value:
+                    ui.notify("Please enter a deck name", color="negative")
+                    return
 
-            with output_container:
-                create_deck()
-            name.set_text(e.name)
-            dialog.close()
-            
-        ui.upload(on_upload = handle_upload, max_files= 1).props('accept=.md,.txt')
+                if deck_name in decks:
+                    ui.notify("Deck already exists", color="negative")
+                    return
 
-        name = ui.input("Deck Name").classes("w-full")
-        save_deck(name,dialog)
-        ui.button("Create", on_click=save_deck)
+                if not parsed_cards:
+                    ui.notify("No valid cards to import", color="negative")
+                    return
 
-        save_deck()
+                if name.value in decks:
+                    ui.notify("Deck already exists", color="negative")
+                    return
+
+                decks[name.value] = parsed_cards.copy()
+
+                ui.notify(f"Imported {len(parsed_cards)} cards into '{name.value}'!", color="positive")
+                dialog.close()
+                display_decks.refresh()
+
+            with ui.row().classes("w-full gap-2"):
+                ui.button("Import Deck", on_click=finalize_import).props("w-full")
+                ui.button("Cancel", on_click=dialog.close).props("w-full")
+        dialog.open()
 
         pass
     with ui.row().classes("w-full justify-center no-wrap gap-0"):
