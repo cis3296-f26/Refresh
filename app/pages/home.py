@@ -2,7 +2,7 @@ from nicegui import ui
 
 from app.components import nav_button
 from app.colors import BLUE, BORDER, MUTED, NEGATIVE, TEXT
-from app.deck_actions import add_card_dialog, create_deck_dialog, delete_deck_dialog
+from app.deck_actions import add_card_dialog, create_deck_dialog, delete_deck_dialog, import_deck_dialog
 from app.store import decks
 
 
@@ -30,7 +30,9 @@ def sidebar():
         nav_button("Add card", "note_add").on(
             "click", lambda: add_card_dialog(display_decks.refresh)
         )
-        nav_button("Import deck", "upload_file")
+        nav_button("Import deck", "upload_file").on(
+            "click", lambda: import_deck_dialog(display_decks.refresh)
+        )
         nav_button("Delete deck", "delete").on(
             "click", lambda: delete_deck_dialog(display_decks.refresh)
         )
