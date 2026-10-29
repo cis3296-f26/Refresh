@@ -17,8 +17,9 @@ def card_details(deck_name: str):
     with ui.row().classes("w-full justify-center no-wrap gap-0"):
         sidebar()
         with ui.column().classes(f"w-full max-w-4xl min-h-screen gap-0 border-x border-[{BORDER}]"): 
+            search = ui.input("Search cards...", placeholder="Type to search...").classes("w-full px-8 pt-6")
+            search.on_value_change(lambda e: display_cards.refresh(deck_name, e.value or ""))
             display_cards(deck_name)
-
 # Left sidebar: logo and action buttons
 def sidebar():
     with ui.column().classes("w-52 sticky top-0 h-screen p-3 gap-1"):
@@ -28,11 +29,18 @@ def sidebar():
         )
 
 @ui.refreshable
-def display_cards(deck_name: str):
+def display_cards(deck_name: str, search_text: str = ""):
     ui.label(f"Cards in {deck_name}").classes(
             f"w-full text-xl font-bold p-4 border-b border-[{BORDER}]"
         )    
     cards  = decks.get(deck_name, [])
+    query = (search_text or "").strip().lower() 
+
+    filtered_cards = [
+        card for card in cards
+        if not query or query in card["question"].lower() or query in card["answer"].lower()
+    ]
+
     with ui.column().classes("w-full p-8 gap-6"):
         if not cards:
             with ui.column().classes("w-full items-center p-8 gap-6"):
@@ -41,9 +49,11 @@ def display_cards(deck_name: str):
             
         else:
          with ui.grid(columns = 3).classes("w-full items-start justify-center p-8 gap-4") as grid:
-            grid.make_sortable(on_end=lambda e: reorder_cards(deck_name, e))
-            
-            for card in cards:
+
+            if not query:
+                grid.make_sortable(on_end=lambda e: reorder_cards(deck_name, e))
+
+            for card in filtered_cards:
                 with ui.card().classes(f"w-full p-4 gap-2 rounded-xl border border-[{BORDER}]"):
                     with ui.column().classes("w-full items-start justify-between no-wrap gap-4"):
                         with ui.column().classes("gap-1 flex-1"):
