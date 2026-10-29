@@ -4,6 +4,7 @@ from nicegui import ui
 
 # Importing the page module registers the "/" route
 import app.pages.home  # noqa: F401
+import app.pages.deck_details  # noqa: F401
 
 ui.run(
     title="Refresh",

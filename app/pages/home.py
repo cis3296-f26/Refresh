@@ -1,5 +1,7 @@
 from nicegui import ui
 
+from urllib.parse import quote
+
 from app.components import nav_button, progress_indicator
 from app.colors import BLUE, BORDER, MUTED, NEGATIVE, TEXT
 from app.deck_actions import add_card_dialog, create_deck_dialog, delete_deck_dialog, import_deck_dialog
@@ -9,24 +11,26 @@ from app.store import decks, progress
 # Display all created decks (re-rendered via display_decks.refresh)
 @ui.refreshable
 def display_decks():
-    with ui.column().classes("w-full items-center p-12 gap-1"):
+    with ui.column().classes("w-full items-center p-8 gap-6"):
         if not decks:
             ui.label("No decks yet").classes("text-3xl font-extrabold")
             ui.label("Create a deck to start studying.").classes(f"text-[{MUTED}]")
         else:
             for deck_name in decks:
-                with ui.column().classes("w-full gap-1"):
-                    ui.label(deck_name).classes("text-lg font-semibold")
+                with ui.column().classes("w-full p-4 gap-3 rounded-xl border border-[{BORDER}]"):
+                    ui.label(deck_name).classes("text-lg font-semibold gap-1")
                     progress_indicator(progress.get(deck_name, 0), len(decks[deck_name]))
-
+                    ui.button("View Details", on_click=lambda name = deck_name: ui.navigate.to(f"/deck_details/{quote(name)}")).props("rounded no-caps unelevated dense").classes(
+                        "w-full text-sm font-bold py-2 mt-1"
+                    )
 
 # Left sidebar: logo and action buttons
 def sidebar():
     with ui.column().classes("w-52 sticky top-0 h-screen p-3 gap-1"):
         ui.icon("style", size="lg").classes(f"text-[{BLUE}] m-3")
 
-        nav_button("Add card", "note_add").on(
-            "click", lambda: add_card_dialog(display_decks.refresh)
+        nav_button("Create deck", "create").on(
+            "click", lambda: create_deck_dialog(display_decks.refresh)
         )
         nav_button("Import deck", "upload_file").on(
             "click", lambda: import_deck_dialog(display_decks.refresh)
@@ -35,12 +39,6 @@ def sidebar():
             "click", lambda: delete_deck_dialog(display_decks.refresh)
         )
 
-        ui.button(
-            "Create deck",
-            on_click=lambda: create_deck_dialog(display_decks.refresh),
-        ).props("rounded no-caps unelevated dense").classes(
-            "w-full mt-3 text-sm font-bold py-2"
-        )
 
 
 # Main column: page heading and deck list
