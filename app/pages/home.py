@@ -3,11 +3,10 @@ from html import escape
 
 from nicegui import ui
 
-
-from app.components import nav_button
+from app.components import nav_button, progress_indicator
 from app.colors import BLUE, BORDER, MUTED, NEGATIVE, TEXT
 from app.deck_actions import add_card_dialog, create_deck_dialog, delete_deck_dialog, import_deck_dialog
-from app.store import decks
+from app.store import decks, progress
 
 #highlight matching letters in search results
 def highlight_match(text, search_text):
@@ -84,8 +83,9 @@ def display_decks(search_text=""):
                             sanitize=False,
                         ).classes("text-lg font-semibold")
 
-                        ui.label(f"{len(decks[deck_name])} cards").classes(
-                            f"text-sm text-[{MUTED}]"
+                        progress_indicator(
+                            progress.get(deck_name, 0),
+                            len(decks[deck_name])
                         )
 
             if matching_cards:

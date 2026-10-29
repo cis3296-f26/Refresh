@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from nicegui import ui,events
-from app.store import decks
+from app.store import decks, progress
 
 
 # Each dialog takes an on_change callback that refreshes the deck list after a change
@@ -121,6 +121,7 @@ def delete_deck_dialog(on_change):
 
             deck_name = deck_select.value
             del decks[deck_name]
+            progress.pop(deck_name, None)
 
             ui.notify(f"Deleted {deck_name}", color="positive")
             dialog.close()
