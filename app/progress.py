@@ -2,7 +2,7 @@
 
 
 def progress_label(reached, total):
-    return f"{reached} of {total} cards"
+    return f"{reached} of {total} cards studied"
 
 
 def progress_fraction(reached, total):
