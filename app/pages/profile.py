@@ -5,7 +5,8 @@ from nicegui import ui
 from app.colors import BLUE, BORDER, MUTED, NEGATIVE, TEXT
 from app.components import nav_button, progress_indicator
 from app.profile import MAX_NAME_LENGTH, clean_display_name, initials, profile_stats
-from app.store import decks, profile, progress
+from app.store import decks, profile, progress, study_days
+from app.streak import current_streak, longest_streak
 
 
 #Stat box(# on top, small label under)
@@ -65,6 +66,10 @@ def stats_section():
         stat_tile(stats["cards"], "Cards")
         stat_tile(stats["cards_reached"], "Cards reached")
         stat_tile(stats["decks_finished"], "Decks finished")
+
+    with ui.row().classes("w-full gap-2 px-4 pt-2 no-wrap"):
+        stat_tile(current_streak(study_days, date.today()), "Current streak (days)")
+        stat_tile(longest_streak(study_days), "Best streak (days)")
 
     ui.label("Deck progress").classes("w-full text-lg font-bold px-4 pt-6 pb-2")
     with ui.column().classes("w-full px-4 gap-3"):

@@ -1,4 +1,5 @@
-import re 
+import re
+from datetime import date
 from html import escape
 
 from nicegui import ui
@@ -8,7 +9,8 @@ from urllib.parse import quote
 from app.components import nav_button, progress_indicator
 from app.colors import BLUE, BORDER, MUTED, NEGATIVE, TEXT
 from app.deck_actions import add_card_dialog, create_deck_dialog, delete_deck_dialog, import_deck_dialog
-from app.store import decks, progress
+from app.store import decks, progress, study_days
+from app.streak import current_streak
 
 #highlight matching letters in search results
 def highlight_match(text, search_text):
@@ -72,9 +74,13 @@ def display_decks(search_text=""):
                 with ui.column().classes("w-full p-4 gap-3 rounded-xl border border-[{BORDER}]"):
                     ui.label(deck_name).classes("text-lg font-semibold gap-1")
                     progress_indicator(progress.get(deck_name, 0), len(decks[deck_name]))
-                    ui.button("View Details", on_click=lambda name = deck_name: ui.navigate.to(f"/deck_details/{quote(name)}")).props("rounded no-caps unelevated dense").classes(
-                        "w-full text-sm font-bold py-2 mt-1"
-                    )
+                    with ui.row().classes("w-full gap-2 no-wrap"):
+                        ui.button("Study", on_click=lambda name = deck_name: ui.navigate.to(f"/study/{quote(name)}")).props("rounded no-caps unelevated dense").classes(
+                            "flex-1 text-sm font-bold py-2 mt-1"
+                        )
+                        ui.button("View Details", on_click=lambda name = deck_name: ui.navigate.to(f"/deck_details/{quote(name)}")).props("rounded no-caps unelevated dense").classes(
+                            "flex-1 text-sm font-bold py-2 mt-1"
+                        )
 
                     
 
@@ -82,6 +88,10 @@ def display_decks(search_text=""):
 def sidebar():
     with ui.column().classes("w-52 sticky top-0 h-screen p-3 gap-1"):
         ui.icon("style", size="lg").classes(f"text-[{BLUE}] m-3")
+
+        streak = current_streak(study_days, date.today())
+        if streak:
+            ui.label(f"🔥 {streak} day streak").classes(f"text-sm font-semibold px-3 text-[{MUTED}]")
 
         search = ui.input (placeholder = "Search...").props("outlined clearable").classes("w-full px-4 py-3")
         
