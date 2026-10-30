@@ -9,13 +9,14 @@ from nicegui.testing.user_simulation import user_simulation
 
 from app.store import decks
 
-def run(test_body):
+def run(test_body, path="/"):
     async def runner():
         decks.clear()
         async with user_simulation() as user:
-            sys.modules.pop("app.pages.home", None)
-            importlib.import_module("app.pages.home")
-            await user.open("/")
+            for module in ("app.pages.home", "app.pages.deck_details"):
+                sys.modules.pop(module, None)
+                importlib.import_module(module)
+            await user.open(path)
             await test_body(user)
 
     asyncio.run(runner())
@@ -25,6 +26,12 @@ def run(test_body):
 # matches substrings, so "Create" would also hit the "Create deck" sidebar button.
 def click(user, label):
     buttons = [b for b in user.find(kind=ui.button).elements if b.text == label]
+    UserInteraction(user, set(buttons[:1]), None).click()
+
+
+# Click the icon-only button showing `icon` (e.g. the "add" button on a deck page)
+def click_icon(user, icon):
+    buttons = [b for b in user.find(kind=ui.button).elements if b.props.get("icon") == icon]
     UserInteraction(user, set(buttons[:1]), None).click()
 
 
@@ -76,18 +83,18 @@ def test_create_deck_duplicate():
 # With no decks there is nowhere to add a card
 def test_add_card_without_decks():
     async def body(user):
-        click(user, "Add card")
+        click_icon(user, "add")
         await user.should_see("Create a deck first!")
 
-    run(body)
+    run(body, "/deck_details/Biology")
 
 
-# A card with a question and answer is saved into the chosen deck
+# A card with a question and answer is saved into the deck being viewed
 def test_add_card():
     async def body(user):
         decks["Biology"] = []
-        click(user, "Add card")
-        choose(user, "Biology")
+        await user.open("/deck_details/Biology")
+        click_icon(user, "add")
         user.find("Question").type("What is DNA?")
         user.find("Answer").type("Genetic material")
         click(user, "Save Card")
@@ -103,8 +110,8 @@ def test_add_card():
 def test_add_card_needs_both_fields():
     async def body(user):
         decks["Biology"] = []
-        click(user, "Add card")
-        choose(user, "Biology")
+        await user.open("/deck_details/Biology")
+        click_icon(user, "add")
         user.find("Question").type("Only a question")
         click(user, "Save Card")
         await user.should_see("Please fill in both fields")

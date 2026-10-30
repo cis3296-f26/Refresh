@@ -94,6 +94,9 @@ def sidebar():
         nav_button("Delete deck", "delete").on(
             "click", lambda: delete_deck_dialog(display_decks.refresh)
         )
+        nav_button("Profile", "person").on(
+            "click", lambda: ui.navigate.to("/profile")
+        )
         
         @ui.refreshable
         def show_suggestions(search_text=""):
