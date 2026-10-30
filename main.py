@@ -2,10 +2,11 @@ import os
 
 from nicegui import ui
 
-# Importing the page module registers the "/" and "/profile" routes
+# Importing the page module registers the "/", "/profile" and "/study" routes
 import app.pages.home  # noqa: F401
 import app.pages.profile  # noqa: F401
 import app.pages.deck_details  # noqa: F401
+import app.pages.study  # noqa: F401
 
 ui.run(
     title="Refresh",
