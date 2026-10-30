@@ -87,11 +87,10 @@ def add_card_dialog(cards ,on_change):
 
         ui.button("Save Card", on_click=save_card)
 
-    dialog.open()
-
-    with ui.card().classes("w-full"):
         ui.label("Or import a deck from a file").classes("text-sm text-gray-500")
         ui.button("Import Deck", on_click=lambda: import_deck_dialog(on_change)).props("flat").classes("text-blue-600 hover:text-blue-800")
+
+    dialog.open()
 
 # Delete an existing deck
 def delete_deck_dialog(on_change):
