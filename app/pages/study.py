@@ -1,3 +1,4 @@
+from datetime import date
 from urllib.parse import quote, unquote
 
 from nicegui import ui
@@ -5,7 +6,8 @@ from nicegui import ui
 from app.colors import BLUE, BORDER, MUTED, NEGATIVE, TEXT
 from app.components import nav_button, progress_indicator
 from app.progress import record_viewed
-from app.store import decks, progress
+from app.store import decks, progress, study_days
+from app.streak import record_study_day
 
 
 # Study page: flip through a deck one card at a time, recording how far the user got
@@ -24,6 +26,7 @@ def study_page(deck_name: str):
         state["index"] = index
         state["show_answer"] = False
         record_viewed(progress, deck_name, index, len(cards))
+        record_study_day(study_days, date.today())
         study_card.refresh()
 
     def flip():
@@ -75,4 +78,5 @@ def study_page(deck_name: str):
         with ui.column().classes(f"w-full max-w-xl min-h-screen gap-0 border-x border-[{BORDER}]"):
             if cards:
                 record_viewed(progress, deck_name, 0, len(cards))
+                record_study_day(study_days, date.today())
             study_card()

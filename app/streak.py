@@ -16,3 +16,15 @@ def current_streak(study_days, today):
         streak += 1
         day -= timedelta(days=1)
     return streak
+
+
+# Longest run of consecutive days ever studied
+def longest_streak(study_days):
+    longest = 0
+    for day in study_days:
+        if day - timedelta(days=1) not in study_days:  # first day of a run
+            length = 1
+            while day + timedelta(days=length) in study_days:
+                length += 1
+            longest = max(longest, length)
+    return longest
