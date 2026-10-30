@@ -3,6 +3,8 @@ from html import escape
 
 from nicegui import ui
 
+from urllib.parse import quote
+
 from app.components import nav_button, progress_indicator
 from app.colors import BLUE, BORDER, MUTED, NEGATIVE, TEXT
 from app.deck_actions import add_card_dialog, create_deck_dialog, delete_deck_dialog, import_deck_dialog
@@ -18,7 +20,7 @@ def highlight_match(text, search_text):
     return pattern.sub(
         lambda match: (
             '<mark style="background-color: #fff2a8; font-weight: bold;">'
-            + escape(match.group())
+            + match.group()
             + '</mark>'
         ),
         escape(text),
@@ -30,7 +32,7 @@ def search_cards(search_text):
     matching_cards = []
 
     if not search_text:
-        return matching_cards
+        return decks
 
     for deck_name, cards in decks.items():
         for card in cards:
@@ -53,76 +55,38 @@ def search_cards(search_text):
 # Display all created decks (re-rendered via display_decks.refresh)
 @ui.refreshable
 def display_decks(search_text=""):
-    with ui.column().classes("w-full items-center p-12 gap-1"):
+    with ui.column().classes("w-full items-center p-8 gap-6"):
         if not decks:
             ui.label("No decks yet").classes("text-3xl font-extrabold")
             ui.label("Create a deck to start studying.").classes(f"text-[{MUTED}]")
         else:
-            matching_decks = [
-                deck_name for deck_name in decks
-                if search_text.lower() in deck_name.lower()
-            ]
+            query = (search_text or "").strip().lower()
+            matching_card_decks = {card["deck"] for card in search_cards(query)} if query else set()
+            filtered_decks = [ name for name in decks
+                              if not query or query in name.lower() or name in matching_card_decks]
+            if not filtered_decks:
+                ui.label("No matching decks or cards found").classes("text-3xl font-extrabold")
+                ui.label("Try a different search term.").classes(f"text-[{MUTED}]")
+            
+            for deck_name in filtered_decks:
+                with ui.column().classes("w-full p-4 gap-3 rounded-xl border border-[{BORDER}]"):
+                    ui.label(deck_name).classes("text-lg font-semibold gap-1")
+                    progress_indicator(progress.get(deck_name, 0), len(decks[deck_name]))
+                    ui.button("View Details", on_click=lambda name = deck_name: ui.navigate.to(f"/deck_details/{quote(name)}")).props("rounded no-caps unelevated dense").classes(
+                        "w-full text-sm font-bold py-2 mt-1"
+                    )
 
-            matching_decks.sort(
-                key=lambda name: (
-                    not name.lower().startswith(search_text.lower()),
-                    name.lower()
-                )
-            )
-
-            matching_cards = search_cards(search_text)
-
-            if not matching_decks and not matching_cards:
-                ui.label("No matching decks or cards found.")
-
-            if matching_decks:
-                for deck_name in matching_decks:
-                    with ui.column().classes("w-full gap-1"):
-                        ui.html(
-                            highlight_match(deck_name, search_text),
-                            sanitize=False,
-                        ).classes("text-lg font-semibold")
-
-                        progress_indicator(
-                            progress.get(deck_name, 0),
-                            len(decks[deck_name])
-                        )
-
-            if matching_cards:
-                ui.label("Matching Cards").classes(
-                    "text-xl font-bold mt-6 mb-2"
-                )
-
-                for card in matching_cards:
-                    with ui.column().classes(
-                        "w-full border rounded-lg p-4 gap-2"
-                    ):
-                        ui.label(f"Deck: {card['deck']}").classes(
-                            f"text-sm text-[{MUTED}]"
-                        )
-
-                        ui.html(
-                            "Question: " + highlight_match(
-                                card["question"], search_text
-                            ),
-                            sanitize=False,
-                        )
-
-                        ui.html(
-                            "Answer: " + highlight_match(
-                                card["answer"], search_text
-                            ),
-                            sanitize=False,
-                        )
-
+                    
 
 # Left sidebar: logo and action buttons
 def sidebar():
     with ui.column().classes("w-52 sticky top-0 h-screen p-3 gap-1"):
         ui.icon("style", size="lg").classes(f"text-[{BLUE}] m-3")
 
-        nav_button("Add card", "note_add").on(
-            "click", lambda: add_card_dialog(display_decks.refresh)
+        search = ui.input (placeholder = "Search...").props("outlined clearable").classes("w-full px-4 py-3")
+        
+        nav_button("Create deck", "create").on(
+            "click", lambda: create_deck_dialog(display_decks.refresh)
         )
         nav_button("Import deck", "upload_file").on(
             "click", lambda: import_deck_dialog(display_decks.refresh)
@@ -130,28 +94,7 @@ def sidebar():
         nav_button("Delete deck", "delete").on(
             "click", lambda: delete_deck_dialog(display_decks.refresh)
         )
-
-        ui.button(
-            "Create deck",
-            on_click=lambda: create_deck_dialog(display_decks.refresh),
-        ).props("rounded no-caps unelevated dense").classes(
-            "w-full mt-3 text-sm font-bold py-2"
-        )
-
-
-# Main column: page heading and deck list
-def main_column():
-    with ui.column().classes(
-        f"w-full max-w-xl min-h-screen gap-0 border-x border-[{BORDER}]"
-    ):
-        ui.label("Decks").classes(
-            f"w-full text-xl font-bold p-4 border-b border-[{BORDER}]"
-        )
-
-        search = ui.input (
-            placeholder = "Search..."
-            ).props("outlined clearable").classes("w-full px-4 py-3")
-
+        
         @ui.refreshable
         def show_suggestions(search_text=""):
             if search_text:
@@ -207,6 +150,18 @@ def main_column():
         )
 
         show_suggestions()
+
+
+
+# Main column: page heading and deck list
+def main_column():
+    with ui.column().classes(
+        f"w-full max-w-xl min-h-screen gap-0 border-x border-[{BORDER}]"
+    ):
+        ui.label("Decks").classes(
+            f"w-full text-xl font-bold p-4 border-b border-[{BORDER}]"
+        )
+
         display_decks()
 
 
