@@ -8,12 +8,8 @@ from nicegui import ui
 
 from app.components import nav_button, progress_indicator
 from app.colors import BLUE, BORDER, MUTED, NEGATIVE, TEXT
-from app.deck_actions import (
-    add_card_dialog,
-    create_deck_dialog,
-    delete_deck_dialog,
-    import_deck_dialog,
-)
+from app.deck_actions import  create_deck_dialog, delete_deck_dialog, import_deck_dialog
+from app.card_actions import add_card_dialog
 from app.store import decks, progress, study_days
 from app.streak import current_streak
 

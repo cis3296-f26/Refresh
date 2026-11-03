@@ -2,7 +2,7 @@ from nicegui import ui
 from urllib.parse import unquote
 
 from app.components import nav_button, progress_indicator
-from app.deck_actions import add_card_dialog, delete_card_dialog, edit_card_dialog
+from app.card_actions import add_card_dialog, delete_card_dialog, edit_card_dialog
 from app.colors import BLUE, BORDER, MUTED, NEGATIVE, TEXT
 from app.store import decks
 
