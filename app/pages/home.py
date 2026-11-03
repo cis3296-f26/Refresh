@@ -8,7 +8,8 @@ from urllib.parse import quote
 
 from app.components import nav_button, progress_indicator
 from app.colors import BLUE, BORDER, MUTED, NEGATIVE, TEXT
-from app.deck_actions import add_card_dialog, create_deck_dialog, delete_deck_dialog, import_deck_dialog
+from app.deck_actions import  create_deck_dialog, delete_deck_dialog, import_deck_dialog
+from app.card_actions import add_card_dialog
 from app.store import decks, progress, study_days
 from app.streak import current_streak
 
@@ -75,10 +76,10 @@ def display_decks(search_text=""):
                     ui.label(deck_name).classes("text-lg font-semibold gap-1")
                     progress_indicator(progress.get(deck_name, 0), len(decks[deck_name]))
                     with ui.row().classes("w-full gap-2 no-wrap"):
-                        ui.button("Study", on_click=lambda name = deck_name: ui.navigate.to(f"/study/{quote(name)}")).props("rounded no-caps unelevated dense").classes(
+                        ui.button("Study", on_click=lambda name = deck_name: ui.navigate.to(f"/study/{quote(name)}")).props("rounded no-caps unelevated dense").classes( # type: ignore
                             "flex-1 text-sm font-bold py-2 mt-1"
                         )
-                        ui.button("View Details", on_click=lambda name = deck_name: ui.navigate.to(f"/deck_details/{quote(name)}")).props("rounded no-caps unelevated dense").classes(
+                        ui.button("View Details", on_click=lambda name = deck_name: ui.navigate.to(f"/deck_details/{quote(name)}")).props("rounded no-caps unelevated dense").classes( # type: ignore
                             "flex-1 text-sm font-bold py-2 mt-1"
                         )
 
