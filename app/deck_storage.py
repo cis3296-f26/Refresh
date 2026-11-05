@@ -43,3 +43,37 @@ def save_deck(conn, user_id, deck_name, cards):
         )
 
     conn.commit()
+
+# Delete a deck and all its cards from the db
+def delete_saved_deck(conn, user_id, deck_name):
+    conn.execute("""
+        DELETE FROM decks
+        WHERE user_id = ? AND name = ?
+    """, (user_id, deck_name))
+
+    conn.commit()
+
+# Update the cards in an existing deck
+def update_saved_deck(conn, user_id, deck_name, cards):
+    cursor = conn.execute(
+        "SELECT id FROM decks WHERE user_id = ? AND name = ?",
+        (user_id, deck_name)
+    )
+
+    deck = cursor.fetchone()
+
+    if deck is None:
+        return
+
+    deck_id = deck[0]
+
+    conn.execute("DELETE FROM cards WHERE deck_id = ?", (deck_id,))
+
+    for position, card in enumerate(cards):
+        conn.execute(
+            """INSERT INTO cards (deck_id, question, answer, position)
+               VALUES (?, ?, ?, ?)""",
+            (deck_id, card["question"], card["answer"], position)
+        )
+
+    conn.commit()
