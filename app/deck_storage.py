@@ -18,3 +18,10 @@ def get_all_decks(decks):
         all_decks.append(deck_data)
 
     return all_decks
+
+#Load saved decks and cards back into the app
+def load_decks(saved_decks, decks):
+    decks.clear()
+
+    for deck in saved_decks:
+        decks[deck["name"]] = deck["cards"].copy()
