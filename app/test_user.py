@@ -1,3 +1,4 @@
+import os
 from datetime import date
 
 from sqlalchemy import insert, select
@@ -5,8 +6,15 @@ from sqlalchemy import insert, select
 from app.db import engine, users
 
 
-
 def get_test_user_id():
+    # Temporary account for local development only.
+    # Replace with the real logged-in user when authentication is ready.
+    if os.environ.get("DATABASE_URL"):
+        raise RuntimeError(
+            "Temporary test user is disabled when DATABASE_URL is configured. "
+            "Connect persistence to the real authenticated user."
+        )
+
     with engine.begin() as conn:
         user_id = conn.execute(
             select(users.c.id).where(
