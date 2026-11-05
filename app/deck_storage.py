@@ -25,3 +25,21 @@ def load_decks(saved_decks, decks):
 
     for deck in saved_decks:
         decks[deck["name"]] = deck["cards"].copy()
+
+# Save a deck and its cards to the database
+def save_deck(conn, user_id, deck_name, cards):
+    cursor = conn.execute(
+        "INSERT INTO decks (user_id, name) VALUES (?, ?)",
+        (user_id, deck_name)
+    )
+
+    deck_id = cursor.lastrowid
+
+    for position, card in enumerate(cards):
+        conn.execute(
+            """INSERT INTO cards (deck_id, question, answer, position)
+               VALUES (?, ?, ?, ?)""",
+            (deck_id, card["question"], card["answer"], position)
+        )
+
+    conn.commit()
