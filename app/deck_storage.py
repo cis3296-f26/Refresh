@@ -1,3 +1,5 @@
+from sqlalchemy import insert, delete, select
+from app.db import decks as db_decks, cards as db_cards
 
 #get deck and return name and cards
 def get_deck_data(deck_name, decks):
@@ -28,52 +30,58 @@ def load_decks(saved_decks, decks):
 
 # Save a deck and its cards to the database
 def save_deck(conn, user_id, deck_name, cards):
-    cursor = conn.execute(
-        "INSERT INTO decks (user_id, name) VALUES (?, ?)",
-        (user_id, deck_name)
+    result = conn.execute(
+        insert(db_decks).values(user_id=user_id, name=deck_name)
     )
 
-    deck_id = cursor.lastrowid
+    deck_id = result.inserted_primary_key[0]
 
     for position, card in enumerate(cards):
         conn.execute(
-            """INSERT INTO cards (deck_id, question, answer, position)
-               VALUES (?, ?, ?, ?)""",
-            (deck_id, card["question"], card["answer"], position)
+            insert(db_cards).values(
+                deck_id=deck_id,
+                question=card["question"],
+                answer=card["answer"],
+                position=position
+            )
         )
-
-    conn.commit()
 
 # Delete a deck and all its cards from the db
 def delete_saved_deck(conn, user_id, deck_name):
-    conn.execute("""
-        DELETE FROM decks
-        WHERE user_id = ? AND name = ?
-    """, (user_id, deck_name))
+    conn.execute(
+        delete(db_decks).where(
+            db_decks.c.user_id == user_id,
+            db_decks.c.name == deck_name
+        )
+    )
 
-    conn.commit()
 
 # Update the cards in an existing deck
 def update_saved_deck(conn, user_id, deck_name, cards):
-    cursor = conn.execute(
-        "SELECT id FROM decks WHERE user_id = ? AND name = ?",
-        (user_id, deck_name)
+    result = conn.execute(
+        select(db_decks.c.id).where(
+            db_decks.c.user_id == user_id,
+            db_decks.c.name == deck_name
+        )
     )
 
-    deck = cursor.fetchone()
+    deck_id = result.scalar_one_or_none()
 
-    if deck is None:
+    if deck_id is None:
         return
 
-    deck_id = deck[0]
+    #eemove old cards
+    conn.execute(
+        delete(db_cards).where(db_cards.c.deck_id == deck_id)
+    )
 
-    conn.execute("DELETE FROM cards WHERE deck_id = ?", (deck_id,))
-
+    #save updated cards
     for position, card in enumerate(cards):
         conn.execute(
-            """INSERT INTO cards (deck_id, question, answer, position)
-               VALUES (?, ?, ?, ?)""",
-            (deck_id, card["question"], card["answer"], position)
+            insert(db_cards).values(
+                deck_id=deck_id,
+                question=card["question"],
+                answer=card["answer"],
+                position=position
+            )
         )
-
-    conn.commit()
