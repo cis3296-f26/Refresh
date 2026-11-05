@@ -63,3 +63,10 @@ progress = Table(
     Column("deck_id", ForeignKey("decks.id", ondelete="CASCADE"), primary_key=True),
     Column("cards_reached", Integer, nullable=False, default=0),
 )
+
+# One row per day the user studied at least one card
+study_days = Table(
+    "study_days", metadata,
+    Column("user_id", ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    Column("day", Date, primary_key=True),
+)
