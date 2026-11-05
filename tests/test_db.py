@@ -4,7 +4,7 @@ import pytest
 from sqlalchemy import func, insert, select
 from sqlalchemy.exc import IntegrityError
 
-from app.db import cards, decks, make_engine, metadata, progress, users
+from app.db import cards, decks, make_engine, metadata, progress, study_days, users
 
 
 def add_user(conn, username):
@@ -56,3 +56,26 @@ def test_deleting_a_deck_removes_its_cards_and_progress():
         conn.execute(decks.delete().where(decks.c.id == deck_id))
         assert conn.execute(select(func.count()).select_from(cards)).scalar() == 0
         assert conn.execute(select(func.count()).select_from(progress)).scalar() == 0
+
+
+def test_same_study_day_cannot_be_recorded_twice():
+    engine = make_engine("sqlite:///:memory:")
+    metadata.create_all(engine)
+    with engine.begin() as conn:
+        user_id = add_user(conn, "a")
+        conn.execute(insert(study_days).values(user_id=user_id, day=date(2026, 11, 5)))
+    with pytest.raises(IntegrityError):
+        with engine.begin() as conn:
+            conn.execute(insert(study_days).values(user_id=user_id, day=date(2026, 11, 5)))
+
+
+def test_deleting_a_user_removes_their_decks_and_study_days():
+    engine = make_engine("sqlite:///:memory:")
+    metadata.create_all(engine)
+    with engine.begin() as conn:
+        user_id = add_user(conn, "a")
+        conn.execute(insert(decks).values(user_id=user_id, name="Bio"))
+        conn.execute(insert(study_days).values(user_id=user_id, day=date(2026, 11, 5)))
+        conn.execute(users.delete().where(users.c.id == user_id))
+        assert conn.execute(select(func.count()).select_from(decks)).scalar() == 0
+        assert conn.execute(select(func.count()).select_from(study_days)).scalar() == 0
