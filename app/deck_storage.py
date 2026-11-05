@@ -70,7 +70,7 @@ def update_saved_deck(conn, user_id, deck_name, cards):
     if deck_id is None:
         return
 
-    #eemove old cards
+    #remove old cards
     conn.execute(
         delete(db_cards).where(db_cards.c.deck_id == deck_id)
     )
@@ -85,3 +85,42 @@ def update_saved_deck(conn, user_id, deck_name, cards):
                 position=position
             )
         )
+
+# Get all saved decks and cards for a user
+def get_saved_decks(conn, user_id):
+    saved_decks = []
+
+    result = conn.execute(
+        select(db_decks.c.id, db_decks.c.name)
+        .where(db_decks.c.user_id == user_id)
+        .order_by(db_decks.c.id)
+    )
+
+    for deck_id, deck_name in result:
+        card_result = conn.execute(
+            select(db_cards.c.question, db_cards.c.answer)
+            .where(db_cards.c.deck_id == deck_id)
+            .order_by(db_cards.c.position)
+        )
+
+        deck_cards = [
+            {"question": question, "answer": answer}
+            for question, answer in card_result
+        ]
+
+        saved_decks.append({
+            "name": deck_name,
+            "cards": deck_cards
+        })
+
+    return saved_decks
+
+# Restore saved decks into memory
+def restore_user_decks(conn, user_id, decks):
+    saved_decks = get_saved_decks(conn, user_id)
+    load_decks(saved_decks, decks)
+
+# Save a new deck 
+def create_saved_deck(engine, user_id, deck_name, cards):
+    with engine.begin() as conn:
+        save_deck(conn, user_id, deck_name, cards)

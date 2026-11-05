@@ -12,7 +12,9 @@ from app.deck_actions import  create_deck_dialog, delete_deck_dialog, import_dec
 from app.card_actions import add_card_dialog
 from app.store import decks, progress, study_days
 from app.streak import current_streak
-
+from app.db import engine
+from app.deck_storage import restore_user_decks
+from app.test_user import get_test_user_id
 
 # Highlight matching letters in search results
 def highlight_match(text, search_text):
@@ -389,8 +391,15 @@ def main_column():
 # Home page
 @ui.page("/")
 def home():
-    ui.colors(primary=BLUE, negative=NEGATIVE)
+    try:
+        user_id = get_test_user_id()
+        with engine.connect() as conn:
+            restore_user_decks(conn, user_id, decks)
+    except Exception as e:
+        print("Database loading error:", repr(e))
+        ui.notify("Could not load saved decks", color="negative")
 
+    ui.colors(primary=BLUE, negative=NEGATIVE)
     ui.query("body").classes(
         f"bg-white text-[{TEXT}]"
     )
