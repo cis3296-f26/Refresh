@@ -1,7 +1,7 @@
 import os
 
 from sqlalchemy import (
-    Column, Date, ForeignKey, Integer, MetaData, String, Table, UniqueConstraint, create_engine,
+    Column, Date, ForeignKey, Integer, MetaData, String, Table, Text, UniqueConstraint, create_engine,
 )
 
 # Used when DATABASE_URL is not set (local development and tests)
@@ -45,4 +45,14 @@ decks = Table(
     Column("user_id", ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
     Column("name", String(100), nullable=False),
     UniqueConstraint("user_id", "name"),
+)
+
+# `position` keeps the card order the user chose when dragging cards around
+cards = Table(
+    "cards", metadata,
+    Column("id", Integer, primary_key=True),
+    Column("deck_id", ForeignKey("decks.id", ondelete="CASCADE"), nullable=False),
+    Column("position", Integer, nullable=False),
+    Column("question", Text, nullable=False),
+    Column("answer", Text, nullable=False),
 )
