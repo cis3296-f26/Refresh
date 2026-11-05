@@ -1,7 +1,7 @@
 import os
 
 from sqlalchemy import (
-    Column, Date, ForeignKey, Integer, MetaData, String, Table, Text, UniqueConstraint, create_engine,
+    Column, Date, ForeignKey, Integer, MetaData, String, Table, Text, UniqueConstraint, create_engine, event,
 )
 
 # Used when DATABASE_URL is not set (local development and tests)
@@ -22,7 +22,15 @@ def make_engine(url=None):
     url = url or database_url()
     if url.startswith("sqlite:///") and ":memory:" not in url:
         os.makedirs(os.path.dirname(url[len("sqlite:///"):]) or ".", exist_ok=True)
-    return create_engine(url, pool_pre_ping=True)
+    engine = create_engine(url, pool_pre_ping=True)
+
+    # SQLite ignores foreign keys (and so ON DELETE CASCADE) unless asked to enforce them
+    if engine.dialect.name == "sqlite":
+        @event.listens_for(engine, "connect")
+        def enable_foreign_keys(dbapi_connection, _):
+            dbapi_connection.execute("PRAGMA foreign_keys = ON")
+
+    return engine
 
 
 engine = make_engine()
