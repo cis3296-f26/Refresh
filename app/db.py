@@ -56,3 +56,10 @@ cards = Table(
     Column("question", Text, nullable=False),
     Column("answer", Text, nullable=False),
 )
+
+# How many cards of a deck the user has reached
+progress = Table(
+    "progress", metadata,
+    Column("deck_id", ForeignKey("decks.id", ondelete="CASCADE"), primary_key=True),
+    Column("cards_reached", Integer, nullable=False, default=0),
+)
