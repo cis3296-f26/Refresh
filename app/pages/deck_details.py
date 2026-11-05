@@ -7,7 +7,7 @@ from app.colors import BLUE, BORDER, MUTED, NEGATIVE, TEXT
 from app.store import decks
 from app.db import engine
 from app.deck_storage import update_saved_deck
-from app.test_user import get_test_user_id
+from app.dev_user import get_test_user_id
 
 @ui.page("/deck_details/{deck_name}")
 def card_details(deck_name: str):

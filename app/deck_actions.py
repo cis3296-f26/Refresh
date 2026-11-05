@@ -7,7 +7,7 @@ from app.parsing import parse_deck
 
 from app.db import engine
 from app.deck_storage import create_saved_deck, delete_saved_deck
-from app.test_user import get_test_user_id
+from app.dev_user import get_test_user_id
 
 # Each dialog takes an on_change callback that refreshes the deck list after a change
 

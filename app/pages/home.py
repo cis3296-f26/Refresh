@@ -14,7 +14,7 @@ from app.store import decks, progress, study_days
 from app.streak import current_streak
 from app.db import engine
 from app.deck_storage import restore_user_decks
-from app.test_user import get_test_user_id
+from app.dev_user import get_test_user_id
 
 # Highlight matching letters in search results
 def highlight_match(text, search_text):

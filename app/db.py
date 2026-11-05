@@ -5,7 +5,7 @@ from sqlalchemy import (
 )
 
 # Used when DATABASE_URL is not set (local development and tests)
-LOCAL_URL = "sqlite:///data/refresh.db"
+LOCAL_URL = os.environ.get("REFRESH_LOCAL_DB_URL", "sqlite:///data/refresh.db")
 
 
 # Hosts hand out postgres:// or postgresql:// URLs; SQLAlchemy needs to be told to use psycopg

@@ -2,7 +2,7 @@ from nicegui import ui
 from app.store import decks, progress
 from app.db import engine
 from app.deck_storage import update_saved_deck
-from app.test_user import get_test_user_id
+from app.dev_user import get_test_user_id
 
 
 def add_card_dialog(deck_name, cards, on_change):
