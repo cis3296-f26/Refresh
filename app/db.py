@@ -78,3 +78,5 @@ study_days = Table(
     Column("user_id", ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
     Column("day", Date, primary_key=True),
 )
+
+metadata.create_all(engine)

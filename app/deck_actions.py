@@ -5,6 +5,10 @@ from nicegui import ui,events
 from app.store import decks, progress
 from app.parsing import parse_deck
 
+from app.db import engine
+from app.deck_storage import create_saved_deck, delete_saved_deck
+from app.test_user import get_test_user_id
+
 # Each dialog takes an on_change callback that refreshes the deck list after a change
 
 # Create a new deck
@@ -24,6 +28,14 @@ def create_deck_dialog(on_change):
 
             if deck_name in decks:
                 ui.notify("Deck already exists", color="negative")
+                return
+
+            try:
+                user_id = get_test_user_id()
+                create_saved_deck(engine, user_id, deck_name, [])
+            except Exception as e:
+                print("Database error:", repr(e))
+                ui.notify("Could not save deck to database", color="negative")
                 return
 
             decks[deck_name] = []
@@ -57,6 +69,15 @@ def delete_deck_dialog(on_change):
                 return
 
             deck_name = deck_select.value
+            try:
+                user_id = get_test_user_id()
+                with engine.begin() as conn:
+                    delete_saved_deck(conn, user_id, deck_name)
+            except Exception as e:
+                print("Database deletion error:", repr(e))
+                ui.notify("Could not delete deck from database", color="negative")
+                return
+            
             del decks[deck_name]
             progress.pop(deck_name, None)
 
@@ -115,13 +136,17 @@ def import_deck_dialog(on_change):
                 ui.notify("No valid cards to import", color="negative")
                 return
 
-            if name.value in decks:
-                ui.notify("Deck already exists", color="negative")
+            try:
+                user_id = get_test_user_id()
+                create_saved_deck(engine, user_id, deck_name, parsed_cards)
+            except Exception as e:
+                print("Database import error:", repr(e))
+                ui.notify("Could not save imported deck to database", color="negative")
                 return
 
-            decks[name.value] = parsed_cards.copy()
+            decks[deck_name] = parsed_cards.copy()
 
-            ui.notify(f"Imported {len(parsed_cards)} cards into '{name.value}'!", color="positive")
+            ui.notify(f"Imported {len(parsed_cards)} cards into '{deck_name}'!", color="positive")
             dialog.close()
             on_change()
 

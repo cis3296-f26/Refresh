@@ -5,6 +5,9 @@ from app.components import nav_button, progress_indicator
 from app.card_actions import add_card_dialog, delete_card_dialog, edit_card_dialog
 from app.colors import BLUE, BORDER, MUTED, NEGATIVE, TEXT
 from app.store import decks
+from app.db import engine
+from app.deck_storage import update_saved_deck
+from app.test_user import get_test_user_id
 
 @ui.page("/deck_details/{deck_name}")
 def card_details(deck_name: str):
@@ -62,13 +65,45 @@ def display_cards(deck_name: str, search_text: str = ""):
                         with ui.row().classes("gap-1 shrink-0 justify-end"):
                             ui.button(icon = "edit", on_click=lambda c=card: edit_card_dialog(deck_name, cards.index(c), display_cards.refresh)).props("flat round dense size=sm").classes("text-gray-500 hover:text-blue-500")
                             ui.button(icon = "delete", on_click=lambda c=card: delete_card_dialog(deck_name, cards.index(c), display_cards.refresh)).props("flat round dense size=sm").classes("text-gray-500 hover:text-red-500")
-        ui.button(icon = "add", on_click=lambda: add_card_dialog(cards, display_cards.refresh)).props("rounded no-caps unelevated dense").classes("w-full mt-3 text-sm font-bold py-2")         
+        ui.button(
+            icon="add",
+            on_click=lambda: add_card_dialog(deck_name, cards, display_cards.refresh)
+        ).props("rounded no-caps unelevated dense").classes(
+            "w-full mt-3 text-sm font-bold py-2"
+        )        
 
 def reorder_cards(deck_name: str, event):
     cards = decks.get(deck_name, [])
-    if 0 <= event.old_index < len(cards) and 0 <= event.new_index < len(cards):
-        card = cards.pop(event.old_index)
-        cards.insert(event.new_index, card)
-        ui.notify("Cards reordered successfully!", color="positive")
-    display_cards.refresh()  
+
+    if not (
+        0 <= event.old_index < len(cards)
+        and 0 <= event.new_index < len(cards)
+    ):
+        return
+
+    updated_cards = cards.copy()
+    card = updated_cards.pop(event.old_index)
+    updated_cards.insert(event.new_index, card)
+
+    try:
+        user_id = get_test_user_id()
+
+        with engine.begin() as conn:
+            update_saved_deck(
+                conn,
+                user_id,
+                deck_name,
+                updated_cards
+            )
+
+    except Exception as e:
+        print("Database reorder error:", repr(e))
+        ui.notify("Could not save card order", color="negative")
+        display_cards.refresh(deck_name)
+        return
+
+    cards[:] = updated_cards
+
+    ui.notify("Cards reordered successfully!", color="positive")
+    display_cards.refresh(deck_name)  
     

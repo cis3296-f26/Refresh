@@ -1,8 +1,11 @@
 from nicegui import ui
 from app.store import decks, progress
+from app.db import engine
+from app.deck_storage import update_saved_deck
+from app.test_user import get_test_user_id
 
 
-def add_card_dialog(cards ,on_change):
+def add_card_dialog(deck_name, cards, on_change):
     if not decks:
         ui.notify("Create a deck first!", color="negative")
         return
@@ -22,10 +25,28 @@ def add_card_dialog(cards ,on_change):
                 ui.notify("Please fill in both fields", color="negative")
                 return
 
-            cards.append({
+            new_card = {
                 "question": question_text,
                 "answer": answer_text,
-            })
+            }
+
+            try:
+                user_id = get_test_user_id()
+
+                with engine.begin() as conn:
+                    update_saved_deck(
+                        conn,
+                        user_id,
+                        deck_name,
+                        cards + [new_card]
+                    )
+
+            except Exception as e:
+                print("Database card saving error:", repr(e))
+                ui.notify("Could not save flashcard", color="negative")
+                return
+
+            cards.append(new_card)
 
             ui.notify("Flashcard added successfully!", color="positive")
             dialog.close()
@@ -58,10 +79,26 @@ def edit_card_dialog(deck_name: str, card_index: int, on_change):
                 ui.notify("Please fill in both fields", color="negative")
                 return
 
-            cards[card_index] = {
+            updated_cards = cards.copy()
+            updated_cards[card_index] = {
                 "question": question_text,
                 "answer": answer_text
             }
+
+            try:
+                user_id = get_test_user_id()
+
+                with engine.begin() as conn:
+                    update_saved_deck(
+                        conn, user_id, deck_name, updated_cards
+                    )
+
+            except Exception as e:
+                print("Database card update error:", repr(e))
+                ui.notify("Could not update flashcard", color="negative")
+                return
+
+            cards[:] = updated_cards
 
             ui.notify("Flashcard updated successfully!", color="positive")
             dialog.close()
@@ -81,15 +118,39 @@ def delete_card_dialog(deck_name: str, card_index: int, on_change):
         ui.label(f"Are you sure you want to delete this flashcard?").classes("text-sm text-gray-600")
 
         def confirm_delete():
-            cards.pop(card_index)
+            updated_cards = cards.copy()
+            updated_cards.pop(card_index)
+
+            try:
+                user_id = get_test_user_id()
+
+                with engine.begin() as conn:
+                    update_saved_deck(
+                        conn, user_id, deck_name, updated_cards
+                    )
+
+            except Exception as e:
+                print("Database card deletion error:", repr(e))
+                ui.notify("Could not delete flashcard", color="negative")
+                return
+
+            cards[:] = updated_cards
+
             if deck_name in progress:
-                progress[deck_name] = min(progress[deck_name], len(cards))
+                progress[deck_name] = min(
+                    progress[deck_name], len(cards)
+                )
+
             ui.notify("Flashcard deleted successfully!", color="positive")
             dialog.close()
             on_change()
 
         with ui.row().classes("w-full gap-2"):
             ui.button("Cancel", on_click=dialog.close).props("w-full")
-            ui.button("Delete", on_click=confirm_delete, color="negative").props("w-full")
-
+            ui.button(
+                "Delete",
+                on_click=confirm_delete,
+                color="negative"
+            ).props("w-full")
+            
     dialog.open()
