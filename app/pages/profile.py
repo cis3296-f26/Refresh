@@ -4,7 +4,11 @@ from nicegui import ui
 
 from app.colors import BLUE, BORDER, MUTED, NEGATIVE, TEXT
 from app.components import nav_button, progress_indicator
+from app.db import engine
+from app.deck_storage import restore_user_decks
+from app.dev_user import get_test_user_id
 from app.profile import MAX_NAME_LENGTH, clean_display_name, initials, profile_stats
+from app.profile_storage import restore_user_profile, save_display_name
 from app.store import decks, profile, progress, study_days
 from app.streak import current_streak, longest_streak
 
@@ -46,9 +50,16 @@ def edit_name_section():
                 ui.notify(f"Name must be 1 to {MAX_NAME_LENGTH} characters", color="negative")
                 return
 
+                        try:
+                user_id = get_test_user_id()
+                with engine.begin() as conn:
+                    save_display_name(conn, user_id, cleaned)
+            except Exception as e:
+                print("Database error:", repr(e))
+                ui.notify("Could not save profile", color="negative")
+                return
+
             profile["name"] = cleaned
-            if profile["joined"] is None:
-                profile["joined"] = date.today()
 
             ui.notify("Profile saved!", color="positive")
             profile_header.refresh()
@@ -84,7 +95,18 @@ def stats_section():
 # Profile page. Same layout as home(sudebar and main col)
 @ui.page("/profile")
 def profile_page():
+    # Decks load here too
+    try:
+        user_id = get_test_user_id()
+        with engine.connect() as conn:
+            restore_user_profile(conn, user_id, profile)
+            restore_user_decks(conn, user_id, decks)
+    except Exception as e:
+        print("Database loading error:", repr(e))
+        ui.notify("Could not load saved profile", color="negative")
+
     ui.colors(primary=BLUE, negative=NEGATIVE)
+
     ui.query("body").classes(f"bg-white text-[{TEXT}]")
     ui.query(".nicegui-content").classes("p-0")
 
