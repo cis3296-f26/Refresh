@@ -1,5 +1,10 @@
-from sqlalchemy import insert, delete, select
+from sqlalchemy import insert, delete, select, update
 from app.db import decks as db_decks, cards as db_cards
+
+def get_deck_id(conn, user_id, deck_name):
+    return conn.execute(
+        select(db_decks.c.id).where (db_decks.c.user_id == user_id, db_decks.c.name == deck_name)).scalar_one()
+
 
 #get deck and return name and cards
 def get_deck_data(deck_name, decks):

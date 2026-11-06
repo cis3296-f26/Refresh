@@ -2,6 +2,7 @@ from nicegui import ui
 from app.store import decks, progress
 from app.db import engine
 from app.deck_storage import update_saved_deck
+from app.card_storage import add_card
 from app.dev_user import get_test_user_id
 
 
@@ -34,12 +35,7 @@ def add_card_dialog(deck_name, cards, on_change):
                 user_id = get_test_user_id()
 
                 with engine.begin() as conn:
-                    update_saved_deck(
-                        conn,
-                        user_id,
-                        deck_name,
-                        cards + [new_card]
-                    )
+                    new_card = add_card(conn, user_id, deck_name, question_text, answer_text)
 
             except Exception as e:
                 print("Database card saving error:", repr(e))
