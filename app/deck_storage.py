@@ -43,7 +43,7 @@ def save_deck(conn, user_id, deck_name, cards):
     deck_id = result.inserted_primary_key[0]
 
     for position, card in enumerate(cards):
-        conn.execute(
+        card_result = conn.execute(
             insert(db_cards).values(
                 deck_id=deck_id,
                 question=card["question"],
@@ -51,6 +51,8 @@ def save_deck(conn, user_id, deck_name, cards):
                 position=position
             )
         )
+        card["id"] = card_result.inserted_primary_key[0]
+        card.setdefault("fsrs", None)
 
 # Delete a deck and all its cards from the db
 def delete_saved_deck(conn, user_id, deck_name):
@@ -83,7 +85,7 @@ def update_saved_deck(conn, user_id, deck_name, cards):
 
     #save updated cards
     for position, card in enumerate(cards):
-        conn.execute(
+        card_result=conn.execute(
             insert(db_cards).values(
                 deck_id=deck_id,
                 question=card["question"],
@@ -91,6 +93,7 @@ def update_saved_deck(conn, user_id, deck_name, cards):
                 position=position
             )
         )
+        card["id"] = card_result.inserted_primary_key[0]
 
 # Get all saved decks and cards for a user
 def get_saved_decks(conn, user_id):

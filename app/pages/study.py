@@ -10,6 +10,7 @@ from app.progress import record_viewed
 from app.store import decks, progress, study_days
 from app.streak import record_study_day
 from app.card_schedule import due_cards, review, next_due, format_interval, preview_intervals
+from app.deck_storage import restore_user_decks
 from app.card_storage import save_review
 from app.dev_user import get_test_user_id
 from app.study_storage import save_progress, save_study_day, restore_study_data
@@ -33,7 +34,7 @@ def study_page(deck_name: str):
 
     with engine.connect() as conn:
         restore_study_data(conn, user_id, progress, study_days)
-
+        restore_user_decks(conn, user_id, decks)
     cards = decks.get(deck_name, [])
 
     queue = due_cards(cards)
@@ -60,7 +61,8 @@ def study_page(deck_name: str):
         queue = due_cards(cards)
         state["card"] = queue[0] if queue else None
         state["show_answer"] = False
-        save_study_activity(index)
+        if state["card"] in cards:
+            save_study_activity(cards.index(state["card"]))
         study_card.refresh()
 
     def flip():

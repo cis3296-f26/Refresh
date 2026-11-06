@@ -1,7 +1,7 @@
 import os
 
 from sqlalchemy import (
-    Column, DateTime, ForeignKey, Integer, MetaData, String, Table, Text, UniqueConstraint, create_engine, event,
+    Column, Date, DateTime, ForeignKey, Integer, MetaData, String, Table, Text, UniqueConstraint, create_engine, event,
 )
 
 # Used when DATABASE_URL is not set (local development and tests)
@@ -77,7 +77,7 @@ progress = Table(
 study_days = Table(
     "study_days", metadata,
     Column("user_id", ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
-    Column("day", DateTime, primary_key=True),
+    Column("day", Date, primary_key=True),
 )
 
 review_logs = Table(
