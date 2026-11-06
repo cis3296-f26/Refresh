@@ -1,5 +1,6 @@
 from sqlalchemy import insert, delete, select, update
 from app.db import decks as db_decks, cards as db_cards
+import json
 
 def get_deck_id(conn, user_id, deck_name):
     return conn.execute(
@@ -103,14 +104,19 @@ def get_saved_decks(conn, user_id):
 
     for deck_id, deck_name in result:
         card_result = conn.execute(
-            select(db_cards.c.question, db_cards.c.answer)
+            select(db_cards.c.id, db_cards.c.question, db_cards.c.answer, db_cards.c.fsrs)
             .where(db_cards.c.deck_id == deck_id)
             .order_by(db_cards.c.position)
         )
 
         deck_cards = [
-            {"question": question, "answer": answer}
-            for question, answer in card_result
+            {
+                "id": card_id,
+                "question": question,
+                "answer": answer,
+                "fsrs": json.loads(fsrs) if fsrs else None,
+            }
+            for card_id, question, answer, fsrs in card_result
         ]
 
         saved_decks.append({

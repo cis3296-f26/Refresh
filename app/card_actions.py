@@ -1,8 +1,7 @@
 from nicegui import ui
 from app.store import decks, progress
 from app.db import engine
-from app.deck_storage import update_saved_deck
-from app.card_storage import add_card
+from app.card_storage import add_card, update_card_text
 from app.dev_user import get_test_user_id
 
 
@@ -75,18 +74,13 @@ def edit_card_dialog(deck_name: str, card_index: int, on_change):
                 ui.notify("Please fill in both fields", color="negative")
                 return
 
-            updated_cards = cards.copy()
-            updated_cards[card_index] = {
-                "question": question_text,
-                "answer": answer_text
-            }
 
             try:
                 user_id = get_test_user_id()
 
                 with engine.begin() as conn:
-                    update_saved_deck(
-                        conn, user_id, deck_name, updated_cards
+                    update_card_text(
+                        conn, card["id"], question_text, answer_text
                     )
 
             except Exception as e:
@@ -94,7 +88,8 @@ def edit_card_dialog(deck_name: str, card_index: int, on_change):
                 ui.notify("Could not update flashcard", color="negative")
                 return
 
-            cards[:] = updated_cards
+            card["question"] = question_text
+            card["answer"] = answer_text
 
             ui.notify("Flashcard updated successfully!", color="positive")
             dialog.close()

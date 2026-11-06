@@ -3,7 +3,7 @@ import re
 from datetime import date
 from html import escape
 from urllib.parse import quote
-
+import fsrs
 from nicegui import ui
 
 from app.components import nav_button, progress_indicator
