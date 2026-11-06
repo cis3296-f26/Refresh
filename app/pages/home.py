@@ -3,15 +3,15 @@ import re
 from datetime import date
 from html import escape
 from urllib.parse import quote
-import fsrs
 from nicegui import ui
 
-from app.components import nav_button, progress_indicator
+from app.components import nav_button, today_indicator
 from app.colors import BLUE, BORDER, MUTED, NEGATIVE, TEXT
 from app.deck_actions import  create_deck_dialog, delete_deck_dialog, import_deck_dialog
 from app.card_actions import add_card_dialog
 from app.store import decks, progress, study_days
 from app.streak import current_streak
+from app.progress import today_progress
 from app.db import engine
 from app.deck_storage import restore_user_decks
 from app.dev_user import get_test_user_id
@@ -68,15 +68,10 @@ def refresh_dashboard():
 @ui.refreshable
 def study_dashboard():
     total_decks = len(decks)
+    all_cards = [card for cards in decks.values() for card in cards]
+    total_cards = len(all_cards)
 
-    total_cards = sum(
-        len(cards) for cards in decks.values()
-    )
-
-    studied_cards = sum(
-        min(max(progress.get(name, 0), 0), len(cards))
-        for name, cards in decks.items()
-    )
+    today = today_progress(all_cards)
 
     streak = current_streak(study_days, date.today())
 
@@ -124,7 +119,7 @@ def study_dashboard():
                 ui.label("Cards Studied").classes(
                     f"text-sm text-[{MUTED}]"
                 )
-                ui.label(str(studied_cards)).classes(
+                ui.label(str(today["done"])).classes(
                     "text-2xl font-bold"
                 )
 
@@ -146,8 +141,8 @@ def study_dashboard():
         )
 
         percentage = (
-            round((studied_cards / total_cards) * 100)
-            if total_cards > 0 else 0
+            round((today["done"] / today["total"]) * 100)
+            if today["total"] > 0 else 0
         )
 
         ui.linear_progress(
@@ -156,7 +151,7 @@ def study_dashboard():
         ).props("rounded").classes("w-full")
 
         ui.label(
-            f"{studied_cards} of {total_cards} cards studied ({percentage}%)"
+            f"{today["done"]} of {today["total"]} cards studied ({percentage}%)"
         ).classes(f"text-sm text-[{MUTED}]")
 
 
@@ -213,10 +208,7 @@ def display_decks(search_text=""):
                         f"{len(decks[deck_name])} flashcards"
                     ).classes(f"text-sm text-[{MUTED}]")
 
-                    progress_indicator(
-                        progress.get(deck_name, 0),
-                        len(decks[deck_name]),
-                    )
+                    today_indicator(decks[deck_name])
 
                     with ui.row().classes(
                         "w-full gap-2 no-wrap"
