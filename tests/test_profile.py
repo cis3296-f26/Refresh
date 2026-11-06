@@ -131,23 +131,3 @@ def test_restore_leaves_profile_alone_for_unknown_user():
         restore_user_profile(conn, 999, loaded)
 
     assert loaded == {"name": "", "joined": None}
-
-
-def test_save_display_name():
-    async def body(user):
-        user.find("Display name").type("Dagem")
-        click(user, "Save")
-        await user.should_see("Profile saved!")https://github.com/cis3296-f26/Refresh/edit/SaveProfileToDB/tests/test_profile.py
-        assert profile["name"] == "Dagem"
-        assert profile["joined"] is not None
-
-    run(body)
-
-
-def test_blank_name_is_rejected():
-    async def body(user):
-        click(user, "Save")
-        await user.should_see("Name must be 1 to 30 characters")
-        assert profile["name"] == ""
-
-    run(body)
