@@ -1,5 +1,11 @@
-from sqlalchemy import insert, delete, select
+from sqlalchemy import insert, delete, select, update
 from app.db import decks as db_decks, cards as db_cards
+import json
+
+def get_deck_id(conn, user_id, deck_name):
+    return conn.execute(
+        select(db_decks.c.id).where (db_decks.c.user_id == user_id, db_decks.c.name == deck_name)).scalar_one()
+
 
 #get deck and return name and cards
 def get_deck_data(deck_name, decks):
@@ -37,7 +43,7 @@ def save_deck(conn, user_id, deck_name, cards):
     deck_id = result.inserted_primary_key[0]
 
     for position, card in enumerate(cards):
-        conn.execute(
+        card_result = conn.execute(
             insert(db_cards).values(
                 deck_id=deck_id,
                 question=card["question"],
@@ -45,6 +51,8 @@ def save_deck(conn, user_id, deck_name, cards):
                 position=position
             )
         )
+        card["id"] = card_result.inserted_primary_key[0]
+        card.setdefault("fsrs", None)
 
 # Delete a deck and all its cards from the db
 def delete_saved_deck(conn, user_id, deck_name):
@@ -77,7 +85,7 @@ def update_saved_deck(conn, user_id, deck_name, cards):
 
     #save updated cards
     for position, card in enumerate(cards):
-        conn.execute(
+        card_result=conn.execute(
             insert(db_cards).values(
                 deck_id=deck_id,
                 question=card["question"],
@@ -85,6 +93,7 @@ def update_saved_deck(conn, user_id, deck_name, cards):
                 position=position
             )
         )
+        card["id"] = card_result.inserted_primary_key[0]
 
 # Get all saved decks and cards for a user
 def get_saved_decks(conn, user_id):
@@ -98,14 +107,19 @@ def get_saved_decks(conn, user_id):
 
     for deck_id, deck_name in result:
         card_result = conn.execute(
-            select(db_cards.c.question, db_cards.c.answer)
+            select(db_cards.c.id, db_cards.c.question, db_cards.c.answer, db_cards.c.fsrs)
             .where(db_cards.c.deck_id == deck_id)
             .order_by(db_cards.c.position)
         )
 
         deck_cards = [
-            {"question": question, "answer": answer}
-            for question, answer in card_result
+            {
+                "id": card_id,
+                "question": question,
+                "answer": answer,
+                "fsrs": json.loads(fsrs) if fsrs else None,
+            }
+            for card_id, question, answer, fsrs in card_result
         ]
 
         saved_decks.append({

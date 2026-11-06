@@ -41,20 +41,14 @@ def save_progress(conn, user_id, deck_name, cards_reached):
 
 # Save the date a user studied, without duplicates
 def save_study_day(conn, user_id, today):
-    existing = conn.execute(
-        select(db_study_days.c.day).where(
-            db_study_days.c.user_id == user_id,
-            db_study_days.c.day == today,
+    conn.execute(
+        insert(db_study_days)
+        .prefix_with("OR IGNORE")
+        .values(
+            user_id=user_id,
+            day=today,
         )
-    ).first()
-
-    if existing is None:
-        conn.execute(
-            insert(db_study_days).values(
-                user_id=user_id,
-                day=today,
-            )
-        )
+    )
 
 
 # Restore saved progress and study days

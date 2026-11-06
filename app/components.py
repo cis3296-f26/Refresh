@@ -1,7 +1,7 @@
 from nicegui import ui
 
 from app.colors import MUTED, TEXT
-from app.progress import progress_fraction, progress_label
+from app.progress import progress_fraction, progress_label, today_progress
 
 
 # Flat, left-aligned sidebar button with a hover highlight
@@ -17,3 +17,7 @@ def progress_indicator(reached, total):
     with ui.row().classes("w-full items-center gap-2"):
         ui.label(progress_label(reached, total)).classes(f"text-sm text-[{MUTED}]")
         ui.linear_progress(value=progress_fraction(reached, total), show_value=False).props("rounded")
+
+def today_indicator(cards):
+    p = today_progress(cards)
+    progress_indicator(p["done"], p["total"])

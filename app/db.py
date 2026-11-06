@@ -1,7 +1,7 @@
 import os
 
 from sqlalchemy import (
-    Column, Date, ForeignKey, Integer, MetaData, String, Table, Text, UniqueConstraint, create_engine, event,
+    Column, Date, DateTime, ForeignKey, Integer, MetaData, String, Table, Text, UniqueConstraint, create_engine, event,
 )
 
 # Used when DATABASE_URL is not set (local development and tests)
@@ -43,7 +43,7 @@ users = Table(
     Column("username", String(50), nullable=False, unique=True),
     Column("password_hash", String(255), nullable=False),
     Column("display_name", String(30), nullable=False, default=""),
-    Column("joined", Date, nullable=False),
+    Column("joined", DateTime, nullable=False),
 )
 
 # A user's deck names are unique, but two users can each have a deck called "Bio"
@@ -63,6 +63,7 @@ cards = Table(
     Column("position", Integer, nullable=False),
     Column("question", Text, nullable=False),
     Column("answer", Text, nullable=False),
+    Column("fsrs", Text, nullable=True),
 )
 
 # How many cards of a deck the user has reached
@@ -77,6 +78,15 @@ study_days = Table(
     "study_days", metadata,
     Column("user_id", ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
     Column("day", Date, primary_key=True),
+)
+
+review_logs = Table(
+    "review_logs", metadata,
+    Column("id", Integer, primary_key=True),
+    Column("card_id", ForeignKey("cards.id", ondelete="CASCADE"), nullable=False),
+    Column("rating", Integer, nullable=False),
+    Column("reviewed_at", DateTime(timezone=True), nullable=False),
+    Column("log", Text, nullable=False), 
 )
 
 metadata.create_all(engine)
