@@ -11,6 +11,8 @@ from app.store import decks, progress, study_days
 from app.streak import record_study_day
 from app.card_schedule import due_cards, review, next_due, format_interval, preview_intervals
 from app.card_storage import save_review
+from app.dev_user import get_test_user_id
+from app.study_storage import save_progress, save_study_day, restore_study_data
 from app.db import engine
 
 
@@ -26,6 +28,12 @@ RATING_BUTTONS = [
 @ui.page("/study/{deck_name}")
 def study_page(deck_name: str):
     deck_name = unquote(deck_name)
+
+    user_id = get_test_user_id()
+
+    with engine.connect() as conn:
+        restore_study_data(conn, user_id, progress, study_days)
+
     cards = decks.get(deck_name, [])
 
     queue = due_cards(cards)
@@ -36,12 +44,23 @@ def study_page(deck_name: str):
     ui.query("body").classes(f"bg-white text-[{TEXT}]")
     ui.query(".nicegui-content").classes("p-0")
 
+    # Save study activity to SQLite
+    def save_study_activity(index):
+        reached = record_viewed(progress, deck_name, index, len(cards))
+        today = date.today()
+
+        with engine.begin() as conn:
+            save_progress(conn, user_id, deck_name, reached)
+            save_study_day(conn, user_id, today)
+
+        record_study_day(study_days, today)
+
     # Show the card at `index` and count it as reached
     def advance():
         queue = due_cards(cards)
         state["card"] = queue[0] if queue else None
         state["show_answer"] = False
-        record_study_day(study_days, date.today())
+        save_study_activity(index)
         study_card.refresh()
 
     def flip():
@@ -132,6 +151,8 @@ def study_page(deck_name: str):
                 "click", lambda: ui.navigate.to(f"/deck_details/{quote(deck_name)}")
             )
         with ui.column().classes(f"w-full max-w-xl min-h-screen gap-0 border-x border-[{BORDER}]"):
+            if cards:
+                save_study_activity(0)
             study_card()
     ui.timer(15, poll)
     

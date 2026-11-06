@@ -6,7 +6,10 @@ from nicegui import ui
 from nicegui.testing.user_interaction import UserInteraction
 from nicegui.testing.user_simulation import user_simulation
 
+from app.db import engine
+from app.dev_user import get_test_user_id
 from app.profile import clean_display_name, initials, profile_stats
+from app.profile_storage import restore_user_profile, save_display_name
 from app.store import decks, profile, progress
 
 
@@ -62,9 +65,9 @@ def click(user, label):
     UserInteraction(user, set(buttons[:1]), None).click()
 
 
-def test_profile_page_shows_empty_state():
+def test_profile_page_shows_saved_profile():
     async def body(user):
-        await user.should_see("No name yet")
+        await user.should_see("Test User")
         await user.should_see("No decks yet")
 
     run(body)
@@ -72,7 +75,7 @@ def test_profile_page_shows_empty_state():
 
 def test_save_display_name():
     async def body(user):
-        user.find("Display name").type("Dagem")
+        user.find("Display name").clear().type("Dagem")
         click(user, "Save")
         await user.should_see("Profile saved!")
         assert profile["name"] == "Dagem"
@@ -81,10 +84,50 @@ def test_save_display_name():
     run(body)
 
 
-def test_blank_name_is_rejected():
+def test_saved_name_survives_a_restart():
     async def body(user):
+        user.find("Display name").clear().type("Dagem")
         click(user, "Save")
-        await user.should_see("Name must be 1 to 30 characters")
-        assert profile["name"] == ""
+        await user.should_see("Profile saved!")
 
     run(body)
+
+    # run() wipes the in-memory profile, same as restarting the app
+    async def after_restart(user):
+        await user.should_see("Dagem")
+        assert profile["name"] == "Dagem"
+
+    run(after_restart)
+
+
+def test_blank_name_is_rejected():
+    async def body(user):
+        user.find("Display name").clear()
+        click(user, "Save")
+        await user.should_see("Name must be 1 to 30 characters")
+        assert profile["name"] == "Test User"
+
+    run(body)
+
+
+# Saving to the database
+
+def test_save_and_restore_profile():
+    user_id = get_test_user_id()
+    with engine.begin() as conn:
+        save_display_name(conn, user_id, "Dagem")
+
+    loaded = {"name": "", "joined": None}
+    with engine.connect() as conn:
+        restore_user_profile(conn, user_id, loaded)
+
+    assert loaded["name"] == "Dagem"
+    assert loaded["joined"] is not None
+
+
+def test_restore_leaves_profile_alone_for_unknown_user():
+    loaded = {"name": "", "joined": None}
+    with engine.connect() as conn:
+        restore_user_profile(conn, 999, loaded)
+
+    assert loaded == {"name": "", "joined": None}

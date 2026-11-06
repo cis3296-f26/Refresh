@@ -15,6 +15,8 @@ from app.progress import today_progress
 from app.db import engine
 from app.deck_storage import restore_user_decks
 from app.dev_user import get_test_user_id
+from app.study_storage import restore_study_data
+
 
 # Highlight matching letters in search results
 def highlight_match(text, search_text):
@@ -387,6 +389,7 @@ def home():
         user_id = get_test_user_id()
         with engine.connect() as conn:
             restore_user_decks(conn, user_id, decks)
+            restore_study_data(conn, user_id, progress, study_days)
     except Exception as e:
         print("Database loading error:", repr(e))
         ui.notify("Could not load saved decks", color="negative")
