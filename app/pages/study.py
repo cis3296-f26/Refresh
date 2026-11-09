@@ -20,9 +20,7 @@ from app.db import engine
 
 RATING_BUTTONS = [
     (Rating.Again, "Again"),
-    (Rating.Hard, "Hard"),
     (Rating.Good, "Good"),
-    (Rating.Easy, "Easy")
 ]
 
 # Study page: flip through a deck one card at a time, recording how far the user got
