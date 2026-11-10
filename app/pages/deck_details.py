@@ -7,12 +7,13 @@ from app.colors import BLUE, BORDER, MUTED, NEGATIVE, TEXT
 from app.store import decks
 from app.db import engine
 from app.deck_storage import update_saved_deck
-from app.dev_user import get_test_user_id
+from app.auth import current_user_id, require_login
 
 @ui.page("/deck_details/{deck_name}")
 def card_details(deck_name: str):
     deck_name = unquote(deck_name)
-    
+    if require_login() is None:
+        return
     ui.colors(primary=BLUE, negative=NEGATIVE)
     ui.query("body").classes(f"bg-white text-[{TEXT}]")
     ui.query(".nicegui-content").classes("p-0")
@@ -86,8 +87,8 @@ def reorder_cards(deck_name: str, event):
     updated_cards.insert(event.new_index, card)
 
     try:
-        user_id = get_test_user_id()
-
+        user_id = current_user_id()
+        
         with engine.begin() as conn:
             update_saved_deck(
                 conn,
