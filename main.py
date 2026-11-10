@@ -17,4 +17,3 @@ ui.run(
     # Signs the login cookie. Set STORAGE_SECRET on the server so it isn't the default
     storage_secret=os.environ.get("STORAGE_SECRET", "refresh-local-dev-secret"),
 )
-)
