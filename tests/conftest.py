@@ -6,6 +6,7 @@ import tempfile
 os.environ.pop("DATABASE_URL", None)
 _test_db = os.path.join(tempfile.mkdtemp(), "test.db").replace("\\", "/")
 os.environ["REFRESH_LOCAL_DB_URL"] = f"sqlite:///{_test_db}"
+os.environ["REFRESH_SKIP_LOGIN"] = "1"
 
 import pytest  # noqa: E402
 
