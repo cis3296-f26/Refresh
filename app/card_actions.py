@@ -2,8 +2,7 @@ from nicegui import ui
 from app.store import decks, progress
 from app.db import engine
 from app.card_storage import add_card, update_card_text, delete_card
-from app.dev_user import get_test_user_id
-
+from app.auth import current_user_id
 
 def add_card_dialog(deck_name, cards, on_change):
     if not decks:
@@ -31,7 +30,7 @@ def add_card_dialog(deck_name, cards, on_change):
             }
 
             try:
-                user_id = get_test_user_id()
+                user_id = current_user_id()
 
                 with engine.begin() as conn:
                     new_card = add_card(conn, user_id, deck_name, question_text, answer_text)
@@ -76,7 +75,7 @@ def edit_card_dialog(deck_name: str, card_index: int, on_change):
 
 
             try:
-                user_id = get_test_user_id()
+                user_id = current_user_id()
 
                 with engine.begin() as conn:
                     update_card_text(
@@ -112,7 +111,7 @@ def delete_card_dialog(deck_name: str, card_index: int, on_change):
         def confirm_delete():
 
             try:
-                user_id = get_test_user_id()
+                user_id = current_user_id()
 
                 with engine.begin() as conn:
                     delete_card(
