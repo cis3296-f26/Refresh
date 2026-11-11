@@ -27,6 +27,10 @@ def hash_password(password):
     return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
 
+# Used to waste the same time as a real check when the username doesn't exist
+DUMMY_HASH = bcrypt.hashpw(b"dummy-password", bcrypt.gensalt()).decode()
+
+
 def check_password(password, password_hash):
     try:
         return bcrypt.checkpw(password.encode(), password_hash.encode())
@@ -71,7 +75,12 @@ def verify_user(username, password):
             select(users.c.id, users.c.password_hash).where(users.c.username == cleaned)
         ).one_or_none()
 
-    if row is None or not check_password(password, row.password_hash):
+    # Always run the slow password check, even for unknown usernames,
+    # so every wrong login takes about the same time.
+    password_hash = row.password_hash if row is not None else DUMMY_HASH
+    password_ok = check_password(password, password_hash)
+
+    if row is None or not password_ok:
         return None
     return row.id
 
