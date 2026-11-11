@@ -12,7 +12,7 @@ from app.streak import record_study_day
 from app.card_schedule import due_cards, review, next_due, format_interval, preview_intervals
 from app.deck_storage import restore_user_decks
 from app.card_storage import save_review
-from app.dev_user import get_test_user_id
+from app.auth import require_login
 from app.study_storage import save_progress, save_study_day, restore_study_data
 from app.db import engine
 
@@ -28,7 +28,9 @@ RATING_BUTTONS = [
 def study_page(deck_name: str):
     deck_name = unquote(deck_name)
 
-    user_id = get_test_user_id()
+    user_id = require_login()
+    if user_id is None:
+        return
 
     with engine.connect() as conn:
         restore_study_data(conn, user_id, progress, study_days)

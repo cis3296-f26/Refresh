@@ -7,10 +7,13 @@ import app.pages.home  # noqa: F401
 import app.pages.profile  # noqa: F401
 import app.pages.deck_details  # noqa: F401
 import app.pages.study  # noqa: F401
+import app.pages.login  # noqa: F401
 
 ui.run(
     title="Refresh",
     host="0.0.0.0",
     port=int(os.environ.get("PORT", 8080)),
     reload=False,
+    # Signs the login cookie. Set STORAGE_SECRET on the server so it isn't the default
+    storage_secret=os.environ.get("STORAGE_SECRET", "refresh-local-dev-secret"),
 )

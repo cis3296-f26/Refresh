@@ -7,7 +7,7 @@ from app.parsing import parse_deck
 
 from app.db import engine
 from app.deck_storage import create_saved_deck, delete_saved_deck
-from app.dev_user import get_test_user_id
+from app.auth import current_user_id
 
 # Each dialog takes an on_change callback that refreshes the deck list after a change
 
@@ -31,7 +31,7 @@ def create_deck_dialog(on_change):
                 return
 
             try:
-                user_id = get_test_user_id()
+                user_id = current_user_id()
                 create_saved_deck(engine, user_id, deck_name, [])
             except Exception as e:
                 print("Database error:", repr(e))
@@ -70,7 +70,7 @@ def delete_deck_dialog(on_change):
 
             deck_name = deck_select.value
             try:
-                user_id = get_test_user_id()
+                user_id = current_user_id()
                 with engine.begin() as conn:
                     delete_saved_deck(conn, user_id, deck_name)
             except Exception as e:
@@ -137,7 +137,7 @@ def import_deck_dialog(on_change):
                 return
 
             try:
-                user_id = get_test_user_id()
+                user_id = current_user_id()
                 create_saved_deck(engine, user_id, deck_name, parsed_cards)
             except Exception as e:
                 print("Database import error:", repr(e))

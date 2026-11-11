@@ -6,7 +6,7 @@ from app.colors import BLUE, BORDER, MUTED, NEGATIVE, TEXT
 from app.components import nav_button, progress_indicator
 from app.db import engine
 from app.deck_storage import restore_user_decks
-from app.dev_user import get_test_user_id
+from app.auth import current_user_id, log_out, require_login
 from app.profile import MAX_NAME_LENGTH, clean_display_name, initials, profile_stats
 from app.profile_storage import restore_user_profile, save_display_name
 from app.store import decks, profile, progress, study_days
@@ -51,7 +51,7 @@ def edit_name_section():
                 return
 
             try:
-                user_id = get_test_user_id()
+                user_id = current_user_id()
                 with engine.begin() as conn:
                     save_display_name(conn, user_id, cleaned)
             except Exception as e:
@@ -95,9 +95,11 @@ def stats_section():
 # Profile page. Same layout as home(sudebar and main col)
 @ui.page("/profile")
 def profile_page():
+    user_id = require_login()
+    if user_id is None:
+        return
     # Decks load here too
     try:
-        user_id = get_test_user_id()
         with engine.connect() as conn:
             restore_user_profile(conn, user_id, profile)
             restore_user_decks(conn, user_id, decks)
@@ -114,6 +116,7 @@ def profile_page():
         with ui.column().classes("w-52 sticky top-0 h-screen p-3 gap-1"):
             ui.icon("style", size="lg").classes(f"text-[{BLUE}] m-3")
             nav_button("Decks", "home").on("click", lambda: ui.navigate.to("/"))
+            nav_button("Log out", "logout").on("click", log_out)
 
         with ui.column().classes(f"w-full max-w-xl min-h-screen gap-0 border-x border-[{BORDER}] pb-8"):
             ui.label("Profile").classes(f"w-full text-xl font-bold p-4 border-b border-[{BORDER}]")
