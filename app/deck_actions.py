@@ -30,8 +30,12 @@ def create_deck_dialog(on_change):
                 ui.notify("Deck already exists", color="negative")
                 return
 
+            user_id = current_user_id()
+            if user_id is None:
+                ui.navigate.to("/login")
+                return
+
             try:
-                user_id = current_user_id()
                 create_saved_deck(engine, user_id, deck_name, [])
             except Exception as e:
                 print("Database error:", repr(e))
@@ -69,8 +73,12 @@ def delete_deck_dialog(on_change):
                 return
 
             deck_name = deck_select.value
+            user_id = current_user_id()
+            if user_id is None:
+                ui.navigate.to("/login")
+                return
+
             try:
-                user_id = current_user_id()
                 with engine.begin() as conn:
                     delete_saved_deck(conn, user_id, deck_name)
             except Exception as e:
@@ -136,8 +144,12 @@ def import_deck_dialog(on_change):
                 ui.notify("No valid cards to import", color="negative")
                 return
 
+            user_id = current_user_id()
+            if user_id is None:
+                ui.navigate.to("/login")
+                return
+
             try:
-                user_id = current_user_id()
                 create_saved_deck(engine, user_id, deck_name, parsed_cards)
             except Exception as e:
                 print("Database import error:", repr(e))

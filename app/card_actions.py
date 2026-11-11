@@ -77,9 +77,11 @@ def edit_card_dialog(deck_name: str, card_index: int, on_change):
                 return
 
 
-            try:
-                user_id = current_user_id()
+            if current_user_id() is None:
+                ui.navigate.to("/login")
+                return
 
+            try:
                 with engine.begin() as conn:
                     update_card_text(
                         conn, card["id"], question_text, answer_text
@@ -113,9 +115,11 @@ def delete_card_dialog(deck_name: str, card_index: int, on_change):
 
         def confirm_delete():
 
-            try:
-                user_id = current_user_id()
+            if current_user_id() is None:
+                ui.navigate.to("/login")
+                return
 
+            try:
                 with engine.begin() as conn:
                     delete_card(
                         conn, card["id"]
