@@ -29,9 +29,12 @@ def add_card_dialog(deck_name, cards, on_change):
                 "answer": answer_text,
             }
 
-            try:
-                user_id = current_user_id()
+            user_id = current_user_id()
+            if user_id is None:
+                ui.navigate.to("/login")
+                return
 
+            try:
                 with engine.begin() as conn:
                     new_card = add_card(conn, user_id, deck_name, question_text, answer_text)
 

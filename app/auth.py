@@ -11,6 +11,7 @@ from app.db import engine, users
 MIN_USERNAME_LENGTH = 3
 MAX_USERNAME_LENGTH = 30
 MIN_PASSWORD_LENGTH = 6
+MAX_PASSWORD_BYTES = 72  # bcrypt can't handle more than this
 
 
 # Clean up
@@ -48,6 +49,8 @@ def create_user(username, password):
         )
     if len(password or "") < MIN_PASSWORD_LENGTH:
         return None, f"Password must be at least {MIN_PASSWORD_LENGTH} characters"
+    if len(password.encode()) > MAX_PASSWORD_BYTES:
+        return None, "Password is too long"
 
     try:
         with engine.begin() as conn:
