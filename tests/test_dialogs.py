@@ -92,6 +92,12 @@ def test_add_card_without_decks():
 # A card with a question and answer is saved into the deck being viewed
 def test_add_card():
     async def body(user):
+        # Cards are saved to the database, so the deck has to exist there too
+        from app.db import engine
+        from app.deck_storage import create_saved_deck
+        from app.dev_user import get_test_user_id
+
+        create_saved_deck(engine, get_test_user_id(), "Biology", [])
         decks["Biology"] = []
         await user.open("/deck_details/Biology")
         click_icon(user, "add")
@@ -99,9 +105,9 @@ def test_add_card():
         user.find("Answer").type("Genetic material")
         click(user, "Save Card")
         await user.should_see("Flashcard added successfully!")
-        assert decks["Biology"] == [
-            {"question": "What is DNA?", "answer": "Genetic material"}
-        ]
+        assert len(decks["Biology"]) == 1
+        assert decks["Biology"][0]["question"] == "What is DNA?"
+        assert decks["Biology"][0]["answer"] == "Genetic material"
 
     run(body)
 

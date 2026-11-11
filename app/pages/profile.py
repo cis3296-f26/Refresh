@@ -50,8 +50,12 @@ def edit_name_section():
                 ui.notify(f"Name must be 1 to {MAX_NAME_LENGTH} characters", color="negative")
                 return
 
+            user_id = current_user_id()
+            if user_id is None:
+                ui.navigate.to("/login")
+                return
+
             try:
-                user_id = current_user_id()
                 with engine.begin() as conn:
                     save_display_name(conn, user_id, cleaned)
             except Exception as e:

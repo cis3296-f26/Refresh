@@ -86,9 +86,12 @@ def reorder_cards(deck_name: str, event):
     card = updated_cards.pop(event.old_index)
     updated_cards.insert(event.new_index, card)
 
+    user_id = current_user_id()
+    if user_id is None:
+        ui.navigate.to("/login")
+        return
+
     try:
-        user_id = current_user_id()
-        
         with engine.begin() as conn:
             update_saved_deck(
                 conn,

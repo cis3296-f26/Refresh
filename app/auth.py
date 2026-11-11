@@ -11,6 +11,7 @@ from app.db import engine, users
 MIN_USERNAME_LENGTH = 3
 MAX_USERNAME_LENGTH = 30
 MIN_PASSWORD_LENGTH = 6
+MAX_PASSWORD_BYTES = 72  # bcrypt can't handle more than this
 
 
 # Clean up
@@ -25,6 +26,10 @@ def clean_username(username):
 
 def hash_password(password):
     return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+
+# Used to waste the same time as a real check when the username doesn't exist
+DUMMY_HASH = bcrypt.hashpw(b"dummy-password", bcrypt.gensalt()).decode()
 
 
 def check_password(password, password_hash):
@@ -44,6 +49,8 @@ def create_user(username, password):
         )
     if len(password or "") < MIN_PASSWORD_LENGTH:
         return None, f"Password must be at least {MIN_PASSWORD_LENGTH} characters"
+    if len(password.encode()) > MAX_PASSWORD_BYTES:
+        return None, "Password is too long"
 
     try:
         with engine.begin() as conn:
@@ -71,7 +78,12 @@ def verify_user(username, password):
             select(users.c.id, users.c.password_hash).where(users.c.username == cleaned)
         ).one_or_none()
 
-    if row is None or not check_password(password, row.password_hash):
+    # Always run the slow password check, even for unknown usernames,
+    # so every wrong login takes about the same time.
+    password_hash = row.password_hash if row is not None else DUMMY_HASH
+    password_ok = check_password(password, password_hash)
+
+    if row is None or not password_ok:
         return None
     return row.id
 
