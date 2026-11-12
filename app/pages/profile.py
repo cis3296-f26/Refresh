@@ -10,6 +10,7 @@ from app.auth import current_user_id, log_out, require_login
 from app.profile import MAX_NAME_LENGTH, clean_display_name, initials, profile_stats
 from app.profile_storage import restore_user_profile, save_display_name
 from app.store import decks, profile, progress, study_days
+from app.study_storage import restore_study_data
 from app.streak import current_streak, longest_streak
 
 
@@ -107,6 +108,7 @@ def profile_page():
         with engine.connect() as conn:
             restore_user_profile(conn, user_id, profile)
             restore_user_decks(conn, user_id, decks)
+            restore_study_data(conn, user_id, progress, study_days)
     except Exception as e:
         print("Database loading error:", repr(e))
         ui.notify("Could not load saved profile", color="negative")
