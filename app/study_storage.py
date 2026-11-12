@@ -1,5 +1,7 @@
 
 from sqlalchemy import select, insert, update
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
 from app.db import decks as db_decks
 from app.db import progress as db_progress
@@ -41,13 +43,12 @@ def save_progress(conn, user_id, deck_name, cards_reached):
 
 # Save the date a user studied, without duplicates
 def save_study_day(conn, user_id, today):
+    # Postgres (Neon) and SQLite (local) need different code to skip duplicates
+    make_insert = pg_insert if conn.dialect.name == "postgresql" else sqlite_insert
     conn.execute(
-        insert(db_study_days)
-        .prefix_with("OR IGNORE")
-        .values(
-            user_id=user_id,
-            day=today,
-        )
+        make_insert(db_study_days)
+        .values(user_id=user_id, day=today)
+        .on_conflict_do_nothing()
     )
 
 
