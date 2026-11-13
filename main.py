@@ -8,6 +8,7 @@ import app.pages.profile  # noqa: F401
 import app.pages.deck_details  # noqa: F401
 import app.pages.study  # noqa: F401
 import app.pages.login  # noqa: F401
+import app.pages.settings  # noqa: F401
 
 ui.run(
     title="Refresh",
