@@ -1,7 +1,7 @@
 import os
 
 from sqlalchemy import (
-    Column, Date, DateTime, ForeignKey, Integer, MetaData, String, Table, Text, UniqueConstraint, create_engine, event,
+    Column, Date, DateTime, ForeignKey, Integer, MetaData, String, Table, Text, UniqueConstraint, create_engine, event, Boolean, Float
 )
 
 # Used when DATABASE_URL is not set (local development and tests)
@@ -89,4 +89,12 @@ review_logs = Table(
     Column("log", Text, nullable=False), 
 )
 
+user_settings = Table("user_settings", metadata,
+    Column("user_id", ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    Column("desired_retention", Float, nullable=False, default=0.9),
+    Column("learning_steps", String(100), nullable=False, default="1m 10m"),
+    Column("relearning_steps", String(100), nullable=False, default="10m"),
+    Column("maximum_interval", Integer, nullable=False, default=36500),
+    Column("enable_fuzzing", Boolean, nullable=False, default=True),
+)
 metadata.create_all(engine)

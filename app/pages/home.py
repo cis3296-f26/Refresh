@@ -281,12 +281,16 @@ def sidebar():
             lambda: delete_deck_dialog(refresh_dashboard),
         )
 
+        nav_button("Settings", "settings").on("click", lambda: ui.navigate.to("/settings"))
+
+
         nav_button("Profile", "person").on(
             "click",
             lambda: ui.navigate.to("/profile"),
         )
 
         nav_button("Log out", "logout").on("click", log_out)
+
 
         @ui.refreshable
         def show_suggestions(search_text=""):

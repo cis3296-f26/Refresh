@@ -7,14 +7,16 @@ from nicegui import ui
 from app.colors import BLUE, BORDER, MUTED, NEGATIVE, TEXT
 from app.components import nav_button, progress_indicator, today_indicator
 from app.progress import record_viewed
-from app.store import decks, progress, study_days
+from app.store import decks, progress, study_days, settings
 from app.streak import record_study_day
 from app.card_schedule import due_cards, review, next_due, format_interval, preview_intervals
 from app.deck_storage import restore_user_decks
 from app.card_storage import save_review
+from app.settings_storage import restore_user_settings
 from app.auth import require_login
 from app.study_storage import save_progress, save_study_day, restore_study_data
 from app.db import engine
+from app.fsrs_settings import make_scheduler
 
 
 
@@ -35,6 +37,9 @@ def study_page(deck_name: str):
     with engine.connect() as conn:
         restore_study_data(conn, user_id, progress, study_days)
         restore_user_decks(conn, user_id, decks)
+        restore_user_settings(conn, user_id, settings)
+
+    scheduler = make_scheduler(settings)
     cards = decks.get(deck_name, [])
 
     queue = due_cards(cards)
@@ -74,7 +79,7 @@ def study_page(deck_name: str):
         if card is None:
             return
 
-        new_state, log = review(card, rating)
+        new_state, log = review(card, rating, scheduler)
 
         try:
             with engine.begin() as conn:
@@ -136,7 +141,7 @@ def study_page(deck_name: str):
             
 
             else:
-                intervals = preview_intervals(card)
+                intervals = preview_intervals(card, scheduler)
                 with ui.row().classes("w-full gap-2 no-wrap"):
                     for rating, label in RATING_BUTTONS:
                         with ui.column().classes("flex-1 items-center gap-1"):
