@@ -105,7 +105,7 @@ def import_deck_dialog(on_change):
 
     with ui.dialog() as dialog, ui.card().classes("w-96 gap-3"):
         ui.label("Upload Deck Here: ").classes("text-lg font-bold")
-        ui.label("Upload a .md or .txt file with each line as a flashcard.").classes("text-sm text-gray-500")
+        ui.label("Upload a .md or .txt file with each line as a flashcard. \n Format: Question | Answer or Question : Answer").classes("text-sm text-gray-500")
 
         name = ui.input("Deck Name").classes("w-full")
         status_label = ui.label("No file uploaded yet").classes("text-sm text-gray-500")
