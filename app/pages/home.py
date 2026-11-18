@@ -211,30 +211,33 @@ def display_decks(search_text=""):
                     ).classes(f"text-sm text-[{MUTED}]")
 
                     today_indicator(decks[deck_name])
+                        
+                    with ui.row().classes("w-full gap-3 no-wrap"):
 
-                    with ui.row().classes(
-                        "w-full gap-2 no-wrap"
-                    ):
+                        # Primary button: Start studying
                         ui.button(
                             "Study",
-                            on_click=lambda name=deck_name:
-                                ui.navigate.to(
-                                    f"/study/{quote(name)}"
-                                ),
+                            icon="play_arrow",
+                            on_click=lambda name=deck_name: ui.navigate.to(
+                                f"/study/{quote(name)}"
+                            ),
+                            color="primary",
                         ).props(
-                            "rounded no-caps unelevated dense"
+                            "rounded no-caps unelevated"
                         ).classes(
                             "flex-1 text-sm font-bold py-2 mt-1"
                         )
 
+                        # Secondary button: View deck details
                         ui.button(
                             "View Details",
-                            on_click=lambda name=deck_name:
-                                ui.navigate.to(
-                                    f"/deck_details/{quote(name)}"
-                                ),
+                            icon="visibility",
+                            on_click=lambda name=deck_name: ui.navigate.to(
+                                f"/deck_details/{quote(name)}"
+                            ),
+                            color="primary",
                         ).props(
-                            "rounded no-caps unelevated dense"
+                            "rounded no-caps outline"
                         ).classes(
                             "flex-1 text-sm font-bold py-2 mt-1"
                         )
