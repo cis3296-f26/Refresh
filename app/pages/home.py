@@ -153,7 +153,7 @@ def study_dashboard():
         ).props("rounded").classes("w-full")
 
         ui.label(
-            f"{today["done"]} of {today["total"]} cards studied ({percentage}%)"
+            f"{today['done']} of {today['total']} cards studied ({percentage}%)"
         ).classes(f"text-sm text-[{MUTED}]")
 
 
