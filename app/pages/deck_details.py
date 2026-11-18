@@ -67,9 +67,10 @@ def display_cards(deck_name: str, search_text: str = ""):
                             ui.button(icon = "edit", on_click=lambda c=card: edit_card_dialog(deck_name, cards.index(c), display_cards.refresh)).props("flat round dense size=sm").classes("text-gray-500 hover:text-blue-500")
                             ui.button(icon = "delete", on_click=lambda c=card: delete_card_dialog(deck_name, cards.index(c), display_cards.refresh)).props("flat round dense size=sm").classes("text-gray-500 hover:text-red-500")
         ui.button(
+            "Add Card",
             icon="add",
             on_click=lambda: add_card_dialog(deck_name, cards, display_cards.refresh)
-        ).props("rounded no-caps unelevated dense").classes(
+        ).props("rounded no-caps unelevated").classes(
             "w-full mt-3 text-sm font-bold py-2"
         )        
 
