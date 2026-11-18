@@ -13,10 +13,10 @@ def nav_button(label, icon):
 
 
 # "X of N cards studied" label with a bar showing how far into the deck the user is
-def progress_indicator(reached, total):
-    with ui.row().classes("w-full items-center gap-2"):
-        ui.label(progress_label(reached, total)).classes(f"text-sm text-[{MUTED}]")
-        ui.linear_progress(value=progress_fraction(reached, total), show_value=False).props("rounded")
+def progress_indicator(done, total):
+    with ui.row().classes("w-full items-center gap-1"):
+        ui.label(progress_label(done, total)).classes(f"text-sm text-[{MUTED}]")
+        ui.linear_progress(value=progress_fraction(done, total), show_value=False).props("rounded").classes("w-full")
 
 def today_indicator(cards):
     p = today_progress(cards)

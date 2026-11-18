@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from fsrs import Card as FsrsCard, Rating, Scheduler
-
+from app.fsrs_settings import make_scheduler
 scheduler = Scheduler()
 RATINGS = (Rating.Again, Rating.Hard, Rating.Good, Rating.Easy)
 
@@ -24,8 +24,9 @@ def next_due(cards: list[dict]):
     dues = [FsrsCard.from_dict(c["fsrs"]).due for c in cards if c.get("fsrs")]
     return min(dues, default=None)
 
-def review(card: dict, rating: Rating):
-    fsrs_card, log = scheduler.review_card(load(card), rating)
+def review(card: dict, rating: Rating, scheduler = None):
+    active_scheduler = scheduler or make_scheduler()
+    fsrs_card, log = active_scheduler.review_card(load(card), rating)
     return fsrs_card.to_dict(), log.to_dict()
 
 def format_interval(delta) -> str:
@@ -41,7 +42,8 @@ def format_interval(delta) -> str:
         return f"{round(days / 30)}mo"
     return f"{round(days / 365, 1)}y"
 
-def preview_intervals(card: dict) -> dict:
+def preview_intervals(card: dict, scheduler = None) -> dict:
+    scheduler = scheduler or make_scheduler()
     now = datetime.now(timezone.utc)
     current = load(card)
     return {

@@ -71,6 +71,10 @@ def edit_name_section():
 
         ui.button("Save", on_click=save_name).props("rounded no-caps unelevated")
 
+# calculate and return seen cards and amount of cards 
+def deck_progress(cards):
+    seen = sum(1 for c in cards if c.get("fsrs"))
+    return seen, len(cards)
 
 # Study totals plus progress for each deck
 def stats_section():
@@ -94,7 +98,7 @@ def stats_section():
         for deck_name, cards in decks.items():
             with ui.column().classes("w-full gap-1"):
                 ui.label(deck_name).classes("font-semibold")
-                progress_indicator(progress.get(deck_name, 0), len(cards))
+                progress_indicator(deck_progress(cards)[0],deck_progress(cards)[1])
 
 
 # Profile page. Same layout as home(sudebar and main col)

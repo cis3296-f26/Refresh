@@ -23,25 +23,16 @@ def today_progress(cards, now=None, start=None):
     now = now or datetime.now(timezone.utc)
     start = start or datetime.combine(date.today(), time.min).astimezone().astimezone(timezone.utc)
     left = done = 0
-
     for card in cards:
-        if not card.get("fsrs"):          # never reviewed: still to do
-            left += 1
-            continue
-
-        fsrs = FsrsCard.from_dict(card["fsrs"])
-        reviewed_today = fsrs.last_review is not None and fsrs.last_review >= start
-
-        if fsrs.due <= now or (reviewed_today and fsrs.state in LEARNING):
-            left += 1
-        elif reviewed_today:
-            done += 1
-
+        fsrs = FsrsCard.from_dict(card["fsrs"]) if card.get("fsrs") else None
+        if fsrs and fsrs.last_review and fsrs.last_review >= start:
+            done += 1   #rated today
+        elif fsrs is None or fsrs.due <= now:
+            left +=1 #new or due
     total = left + done
     return {
         "left": left,
         "done": done,
         "total": total,
-        "fraction_left": left / total if total else 0.0,
         "fraction_done": done / total if total else 1.0,
     }

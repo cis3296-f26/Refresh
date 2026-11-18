@@ -1,5 +1,5 @@
 from collections.abc import MutableMapping, MutableSet
-
+from app.fsrs_settings import DEFAULTS
 
 # Each logged-in user gets their own copy of this data
 def _current_key():
@@ -78,3 +78,6 @@ study_days = PerUserSet()
 
 # Current user's profile: display name and the date it was created
 profile = PerUserDict(default=lambda: {"name": "", "joined": None})
+
+# Current user's settings
+settings = PerUserDict(default=lambda: dict(DEFAULTS))
