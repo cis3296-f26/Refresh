@@ -94,6 +94,9 @@ def edit_card_dialog(deck_name: str, card_index: int, on_change):
                 ui.notify("Please fill in both fields", color="negative")
                 return
 
+            if is_duplicate(cards, question_text, exclude_index=card_index):
+                ui.notify("Another card already has this question", color="negative")
+                return
 
             if current_user_id() is None:
                 ui.navigate.to("/login")
