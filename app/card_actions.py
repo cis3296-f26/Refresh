@@ -4,6 +4,20 @@ from app.db import engine
 from app.card_storage import add_card, update_card_text, delete_card
 from app.auth import current_user_id
 
+
+def _normalize(text: str) -> str:
+    return " ".join(text.split()).casefold()
+
+
+def is_duplicate(cards, question, exclude_index=None):
+    q = _normalize(question)
+    return any(
+        _normalize(c["question"]) == q
+        for i, c in enumerate(cards)
+        if i != exclude_index
+    )
+
+
 def add_card_dialog(deck_name, cards, on_change):
     if not decks:
         ui.notify("Create a deck first!", color="negative")
@@ -22,6 +36,10 @@ def add_card_dialog(deck_name, cards, on_change):
 
             if not question_text or not answer_text:
                 ui.notify("Please fill in both fields", color="negative")
+                return
+
+            if is_duplicate(cards, question_text):
+                ui.notify("A card with this question already exists in this deck", color="negative")
                 return
 
             new_card = {
