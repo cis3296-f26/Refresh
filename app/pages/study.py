@@ -21,8 +21,8 @@ from app.fsrs_settings import make_scheduler
 
 
 RATING_BUTTONS = [
-    (Rating.Again, "Again"),
-    (Rating.Good, "Good"),
+    (Rating.Again, "Again", "Review this card again soon", "red-6"),
+    (Rating.Good, "Good", "I remembered this card", "green-6"),
 ]
 
 # Study page: flip through a deck one card at a time, recording how far the user got
@@ -142,13 +142,24 @@ def study_page(deck_name: str):
 
             else:
                 intervals = preview_intervals(card, scheduler)
-                with ui.row().classes("w-full gap-2 no-wrap"):
-                    for rating, label in RATING_BUTTONS:
+
+                with ui.row().classes("w-full gap-3 no-wrap"):
+                    for rating, label, description, color in RATING_BUTTONS:
                         with ui.column().classes("flex-1 items-center gap-1"):
-                            ui.button(
-                                label, on_click=lambda r=rating: rate(r)
-                            ).props("no-caps unelevated").classes("w-full")
-                            ui.label(intervals[rating]).classes(f"text-xs text-[{MUTED}]")
+
+                            button = ui.button(
+                                label,
+                                on_click=lambda r=rating: rate(r),
+                                color=color,
+                            ).props("no-caps unelevated rounded").classes("w-full")
+
+                            ui.label(intervals[rating]).classes(
+                                f"text-xs font-semibold text-[{MUTED}]"
+                            )
+
+                            ui.label(description).classes(
+                                f"text-xs text-center text-[{MUTED}]"
+                            )
 
     with ui.row().classes("w-full justify-center no-wrap gap-0"):
         with ui.column().classes("w-52 sticky top-0 h-screen p-3 gap-1"):

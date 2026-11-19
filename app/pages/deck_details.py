@@ -14,6 +14,7 @@ def card_details(deck_name: str):
     deck_name = unquote(deck_name)
     if require_login() is None:
         return
+    
     ui.colors(primary=BLUE, negative=NEGATIVE)
     ui.query("body").classes(f"bg-white text-[{TEXT}]")
     ui.query(".nicegui-content").classes("p-0")
@@ -64,12 +65,35 @@ def display_cards(deck_name: str, search_text: str = ""):
                             ui.label(card["question"]).classes("text-md font-large")
                             ui.label(card["answer"]).classes("text-sm text-gray-500")
                         with ui.row().classes("gap-1 shrink-0 justify-end"):
-                            ui.button(icon = "edit", on_click=lambda c=card: edit_card_dialog(deck_name, cards.index(c), display_cards.refresh)).props("flat round dense size=sm").classes("text-gray-500 hover:text-blue-500")
-                            ui.button(icon = "delete", on_click=lambda c=card: delete_card_dialog(deck_name, cards.index(c), display_cards.refresh)).props("flat round dense size=sm").classes("text-gray-500 hover:text-red-500")
+                            
+                            # Edit Card button
+                            edit_button = ui.button(
+                                icon="edit",
+                                on_click=lambda c=card: edit_card_dialog(
+                                    deck_name, cards.index(c), display_cards.refresh
+                                )
+                            ).props("flat round dense size=sm").classes(
+                                "text-blue-500 hover:bg-blue-50"
+                            )
+                            edit_button.tooltip("Edit Card")
+
+                            # Delete Card button
+                            delete_button = ui.button(
+                                icon="delete",
+                                color="negative",
+                                on_click=lambda c=card: delete_card_dialog(
+                                    deck_name, cards.index(c), display_cards.refresh
+                                )
+                            ).props("flat round dense size=sm").classes(
+                                "hover:bg-red-50"
+                            )
+                            delete_button.tooltip("Delete Card")
+
         ui.button(
+            "Add Card",
             icon="add",
             on_click=lambda: add_card_dialog(deck_name, cards, display_cards.refresh)
-        ).props("rounded no-caps unelevated dense").classes(
+        ).props("rounded no-caps unelevated").classes(
             "w-full mt-3 text-sm font-bold py-2"
         )        
 
