@@ -52,6 +52,7 @@ def add_card_dialog(deck_name, cards, on_change):
                 ui.navigate.to("/login")
                 return
 
+            save_btn.disable()
             try:
                 with engine.begin() as conn:
                     new_card = add_card(conn, user_id, deck_name, question_text, answer_text)
@@ -59,6 +60,7 @@ def add_card_dialog(deck_name, cards, on_change):
             except Exception as e:
                 print("Database card saving error:", repr(e))
                 ui.notify("Could not save flashcard", color="negative")
+                save_btn.enable()
                 return
 
             cards.append(new_card)
@@ -67,7 +69,7 @@ def add_card_dialog(deck_name, cards, on_change):
             dialog.close()
             on_change()
 
-        ui.button("Save Card", on_click=save_card)
+        save_btn = ui.button("Save Card", on_click=save_card)
 
     dialog.open()
 
