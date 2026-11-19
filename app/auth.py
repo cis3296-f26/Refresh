@@ -88,7 +88,7 @@ def verify_user(username, password):
     return row.id
 
 
-# browser's session(app.storage.user is saved per browser by NiceGUI) and Change password
+# Change password (needs the current one first)
 def change_password(user_id, current_password, new_password):
     if len(new_password or "") < MIN_PASSWORD_LENGTH:
         return f"Password must be at least {MIN_PASSWORD_LENGTH} characters"
@@ -105,7 +105,10 @@ def change_password(user_id, current_password, new_password):
             update(users).where(users.c.id == user_id).values(password_hash=hash_password(new_password))
         )
     return None
-def session():
+
+    
+    # browser's session(app.storage.user is saved per browser by NiceGUI)
+    def session():
     try:
         return app.storage.user
     except Exception:
