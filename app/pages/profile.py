@@ -78,11 +78,11 @@ def change_password_section():
         current = ui.input("Current password", password=True).props("outlined dense").classes("w-full")
         new = ui.input("New password", password=True).props("outlined dense").classes("w-full")
 
-def save_password():
-    user_id = current_user_id()
-    if user_id is None:
-        ui.navigate.to("/login")
-        return
+        def save_password():
+            user_id = current_user_id()
+            if user_id is None:
+                ui.navigate.to("/login")
+                return
 
             error = change_password(user_id, current.value, new.value)
         if error:
