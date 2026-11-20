@@ -119,7 +119,7 @@ def delete_account(user_id, password):
     return None
 
 
-            # browser's session(app.storage.user is saved per browser by NiceGUI)
+# browser's session(app.storage.user is saved per browser by NiceGUI)
 def session():
     try:
         return app.storage.user
