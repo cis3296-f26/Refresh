@@ -4,6 +4,20 @@ from app.db import engine
 from app.card_storage import add_card, update_card_text, delete_card
 from app.auth import current_user_id
 
+
+def _normalize(text: str) -> str:
+    return " ".join(text.split()).casefold()
+
+
+def is_duplicate(cards, question, exclude_index=None):
+    q = _normalize(question)
+    return any(
+        _normalize(c["question"]) == q
+        for i, c in enumerate(cards)
+        if i != exclude_index
+    )
+
+
 def add_card_dialog(deck_name, cards, on_change):
     if not decks:
         ui.notify("Create a deck first!", color="negative")
@@ -24,6 +38,10 @@ def add_card_dialog(deck_name, cards, on_change):
                 ui.notify("Please fill in both fields", color="negative")
                 return
 
+            if is_duplicate(cards, question_text):
+                ui.notify("A card with this question already exists in this deck", color="negative")
+                return
+
             new_card = {
                 "question": question_text,
                 "answer": answer_text,
@@ -34,6 +52,7 @@ def add_card_dialog(deck_name, cards, on_change):
                 ui.navigate.to("/login")
                 return
 
+            save_btn.disable()
             try:
                 with engine.begin() as conn:
                     new_card = add_card(conn, user_id, deck_name, question_text, answer_text)
@@ -41,6 +60,7 @@ def add_card_dialog(deck_name, cards, on_change):
             except Exception as e:
                 print("Database card saving error:", repr(e))
                 ui.notify("Could not save flashcard", color="negative")
+                save_btn.enable()
                 return
 
             cards.append(new_card)
@@ -49,7 +69,7 @@ def add_card_dialog(deck_name, cards, on_change):
             dialog.close()
             on_change()
 
-        ui.button("Save Card", on_click=save_card)
+        save_btn = ui.button("Save Card", on_click=save_card)
 
     dialog.open()
 
@@ -76,6 +96,9 @@ def edit_card_dialog(deck_name: str, card_index: int, on_change):
                 ui.notify("Please fill in both fields", color="negative")
                 return
 
+            if is_duplicate(cards, question_text, exclude_index=card_index):
+                ui.notify("Another card already has this question", color="negative")
+                return
 
             if current_user_id() is None:
                 ui.navigate.to("/login")
