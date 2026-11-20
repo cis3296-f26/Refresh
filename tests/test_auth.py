@@ -7,7 +7,7 @@ from nicegui.testing.user_interaction import UserInteraction
 from nicegui.testing.user_simulation import user_simulation
 from sqlalchemy import select
 
-from app.auth import clean_username, create_user, verify_user
+from app.auth import change_password, clean_username, create_user, verify_user
 from app.db import engine, users
 
 
@@ -122,3 +122,19 @@ def test_login_page_rejects_wrong_password():
         await user.should_see("Wrong username or password")
 
     run(body, "/login")
+
+
+def test_change_password():
+    user_id, _ = create_user("dagem", "secret123")
+
+    assert change_password(user_id, "secret123", "newpass456") is None
+    assert verify_user("dagem", "newpass456") == user_id
+    assert verify_user("dagem", "secret123") is None
+
+
+def test_change_password_rejects_bad_input():
+    user_id, _ = create_user("dagem", "secret123")
+
+    assert change_password(user_id, "wrong", "newpass456") == "Current password is wrong"
+    assert change_password(user_id, "secret123", "abc") == "Password must be at least 6 characters"
+    assert verify_user("dagem", "secret123") == user_id
