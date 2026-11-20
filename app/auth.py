@@ -3,7 +3,7 @@ from datetime import datetime
 
 import bcrypt
 from nicegui import app, ui
-from sqlalchemy import insert, select, update
+from sqlalchemy import delete, insert, select, update
 from sqlalchemy.exc import IntegrityError
 
 from app.db import engine, users
@@ -107,7 +107,19 @@ def change_password(user_id, current_password, new_password):
     return None
 
 
-# browser's session(app.storage.user is saved per browser by NiceGUI)
+# Delete account (needs the password to confirm)
+def delete_account(user_id, password):
+    with engine.begin() as conn:
+        row = conn.execute(
+            select(users.c.password_hash).where(users.c.id == user_id)
+        ).one_or_none()
+        if row is None or not check_password(password or "", row.password_hash):
+            return "Password is wrong"
+        conn.execute(delete(users).where(users.c.id == user_id))
+    return None
+
+
+            # browser's session(app.storage.user is saved per browser by NiceGUI)
 def session():
     try:
         return app.storage.user
