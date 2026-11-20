@@ -106,9 +106,9 @@ def change_password(user_id, current_password, new_password):
         )
     return None
 
-    
-    # browser's session(app.storage.user is saved per browser by NiceGUI)
-    def session():
+
+# browser's session(app.storage.user is saved per browser by NiceGUI)
+def session():
     try:
         return app.storage.user
     except Exception:
