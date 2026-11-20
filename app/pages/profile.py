@@ -85,9 +85,9 @@ def change_password_section():
                 return
 
             error = change_password(user_id, current.value, new.value)
-        if error:
-            ui.notify(error, color="negative")
-            return
+            if error:
+                ui.notify(error, color="negative")
+                return
 
             current.value = ""
             new.value = ""
