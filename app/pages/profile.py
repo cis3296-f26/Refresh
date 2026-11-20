@@ -122,7 +122,7 @@ def delete_account_section():
             log_out()
 
         ui.button("Delete account", color="negative", on_click=confirm.open).props("rounded no-caps unelevated")
-                calculate and return seen cards and amount of cards 
+# calculate and return seen cards and amount of cards 
 def deck_progress(cards):
     seen = sum(1 for c in cards if c.get("fsrs"))
     return seen, len(cards)
