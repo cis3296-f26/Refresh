@@ -1,3 +1,4 @@
+
 from datetime import date,datetime,timezone
 from urllib.parse import quote, unquote
 
@@ -17,7 +18,6 @@ from app.auth import require_login
 from app.study_storage import save_progress, save_study_day, restore_study_data
 from app.db import engine
 from app.fsrs_settings import make_scheduler
-
 
 
 RATING_BUTTONS = [
@@ -99,7 +99,10 @@ def study_page(deck_name: str):
 
     def caught_up_view():
         upcoming = next_due(cards)
-        with ui.column().classes("w-full items-center p-8 gap-6"):
+        with ui.column().classes(
+            "w-full items-center p-8 gap-6 text-center"
+        ):
+            ui.icon("check_circle", size="64px").classes("text-green-600")
             ui.label("All caught up!").classes("text-3xl font-extrabold")
             ui.label(f"Reviewed {state['reviewed']} cards this session.").classes(
                 f"text-[{MUTED}]"
@@ -108,6 +111,11 @@ def study_page(deck_name: str):
                 wait = format_interval(upcoming - datetime.now(timezone.utc))
                 ui.label(f"Next card due in {wait}").classes(f"text-[{MUTED}]")
 
+            ui.button(
+                "Back to Dashboard",
+                icon="home",
+                on_click=lambda: ui.navigate.to("/")
+            ).props("rounded no-caps unelevated").classes("px-6 py-2")
 
     @ui.refreshable
     def study_card():
@@ -121,7 +129,6 @@ def study_page(deck_name: str):
                 ui.label("Add some cards to this deck first.").classes(f"text-[{MUTED}]")
             return
 
-        
         card = state["card"]
 
         if card is None:
@@ -131,14 +138,34 @@ def study_page(deck_name: str):
         with ui.column().classes("w-full p-8 gap-6"):
             today_indicator(cards)
             ui.label(f"{len(due_cards(cards))} due").classes(f"text-sm text-[{MUTED}]")
-            with ui.card().classes(f"w-full p-6 gap-3 rounded-xl border border-[{BORDER}]"):
-                ui.label(card["question"]).classes("text-xl font-semibold")
+            with ui.card().classes(
+                f"w-full min-h-[260px] p-8 gap-5 rounded-2xl "
+                f"border border-[{BORDER}] shadow-sm "
+                "items-center justify-center"
+            ):
+                ui.label("QUESTION").classes(
+                    f"text-xs font-bold tracking-widest text-[{MUTED}]"
+                )
+                ui.label(card["question"]).classes(
+                    "text-2xl font-semibold text-center break-words w-full"
+                )
                 if state["show_answer"]:
-                    ui.label(card["answer"]).classes(f"text-lg text-[{MUTED}]")
+                    ui.separator().classes("my-3")
+                    ui.label("ANSWER").classes(
+                        f"text-xs font-bold tracking-widest text-[{MUTED}]"
+                    )
+                    ui.label(card["answer"]).classes(
+                        f"text-xl text-center break-words w-full text-[{TEXT}]"
+                    )
 
             if not state["show_answer"]:
-                ui.button("Show answer", on_click=flip).props("rounded no-caps unelevated").classes("flex-1")
-            
+                ui.button(
+                    "Show Answer",
+                    icon="visibility",
+                    on_click=flip
+                ).props("rounded no-caps unelevated").classes(
+                    "w-full py-3 text-base font-semibold"
+                )
 
             else:
                 intervals = preview_intervals(card, scheduler)
@@ -168,12 +195,10 @@ def study_page(deck_name: str):
             nav_button("Deck details", "list").on(
                 "click", lambda: ui.navigate.to(f"/deck_details/{quote(deck_name)}")
             )
-        with ui.column().classes(f"w-full max-w-xl min-h-screen gap-0 border-x border-[{BORDER}]"):
+        with ui.column().classes(
+            f"w-full max-w-xl min-h-screen gap-0 border-x border-[{BORDER}]"
+        ):
             if cards:
                 save_study_activity(0)
             study_card()
     ui.timer(15, poll)
-    
-
-
-    
