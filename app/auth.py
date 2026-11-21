@@ -3,7 +3,7 @@ from datetime import datetime
 
 import bcrypt
 from nicegui import app, ui
-from sqlalchemy import insert, select
+from sqlalchemy import delete, insert, select, update
 from sqlalchemy.exc import IntegrityError
 
 from app.db import engine, users
@@ -86,6 +86,37 @@ def verify_user(username, password):
     if row is None or not password_ok:
         return None
     return row.id
+
+
+# Change password (needs the current one first)
+def change_password(user_id, current_password, new_password):
+    if len(new_password or "") < MIN_PASSWORD_LENGTH:
+        return f"Password must be at least {MIN_PASSWORD_LENGTH} characters"
+    if len(new_password.encode()) > MAX_PASSWORD_BYTES:
+        return "Password is too long"
+
+    with engine.begin() as conn:
+        row = conn.execute(
+            select(users.c.password_hash).where(users.c.id == user_id)
+        ).one_or_none()
+        if row is None or not check_password(current_password or "", row.password_hash):
+            return "Current password is wrong"
+        conn.execute(
+            update(users).where(users.c.id == user_id).values(password_hash=hash_password(new_password))
+        )
+    return None
+
+
+# Delete account (needs the password to confirm)
+def delete_account(user_id, password):
+    with engine.begin() as conn:
+        row = conn.execute(
+            select(users.c.password_hash).where(users.c.id == user_id)
+        ).one_or_none()
+        if row is None or not check_password(password or "", row.password_hash):
+            return "Password is wrong"
+        conn.execute(delete(users).where(users.c.id == user_id))
+    return None
 
 
 # browser's session(app.storage.user is saved per browser by NiceGUI)

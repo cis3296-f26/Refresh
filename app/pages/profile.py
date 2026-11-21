@@ -6,7 +6,7 @@ from app.colors import BLUE, BORDER, MUTED, NEGATIVE, TEXT
 from app.components import nav_button, progress_indicator
 from app.db import engine
 from app.deck_storage import restore_user_decks
-from app.auth import current_user_id, log_out, require_login
+from app.auth import change_password, current_user_id, delete_account, log_out, require_login
 from app.profile import MAX_NAME_LENGTH, clean_display_name, initials, profile_stats
 from app.profile_storage import restore_user_profile, save_display_name
 from app.store import decks, profile, progress, study_days
@@ -71,6 +71,57 @@ def edit_name_section():
 
         ui.button("Save", on_click=save_name).props("rounded no-caps unelevated")
 
+# Change password box
+def change_password_section():
+    ui.label("Change password").classes(f"w-full text-lg font-bold px-4 pt-6 pb-2 border-t border-[{BORDER}] mt-4")
+    with ui.column().classes("w-full gap-2 px-4"):
+        current = ui.input("Current password", password=True).props("outlined dense").classes("w-full")
+        new = ui.input("New password", password=True).props("outlined dense").classes("w-full")
+
+        def save_password():
+            user_id = current_user_id()
+            if user_id is None:
+                ui.navigate.to("/login")
+                return
+
+            error = change_password(user_id, current.value, new.value)
+            if error:
+                ui.notify(error, color="negative")
+                return
+
+            current.value = ""
+            new.value = ""
+            ui.notify("Password changed!", color="positive")
+
+        ui.button("Change password", on_click=save_password).props("rounded no-caps unelevated")
+# Delete account box
+def delete_account_section():
+    ui.label("Delete account").classes(f"w-full text-lg font-bold px-4 pt-6 pb-2 border-t border-[{BORDER}] mt-4")
+    with ui.column().classes("w-full gap-2 px-4"):
+        ui.label("This deletes your profile, decks and cards for good.").classes(f"text-sm text-[{MUTED}]")
+        password = ui.input("Password to confirm", password=True).props("outlined dense").classes("w-full")
+
+        with ui.dialog() as confirm, ui.card():
+            ui.label("Delete your account? This can't be undone.")
+            with ui.row():
+                ui.button("Cancel", on_click=confirm.close).props("flat no-caps")
+                ui.button("Yes, delete it", color="negative", on_click=lambda: really_delete()).props("no-caps unelevated")
+
+        def really_delete():
+            confirm.close()
+            user_id = current_user_id()
+            if user_id is None:
+                ui.navigate.to("/login")
+                return
+
+            error = delete_account(user_id, password.value)
+            if error:
+                ui.notify(error, color="negative")
+                return
+
+            log_out()
+
+        ui.button("Delete account", color="negative", on_click=confirm.open).props("rounded no-caps unelevated")
 # calculate and return seen cards and amount of cards 
 def deck_progress(cards):
     seen = sum(1 for c in cards if c.get("fsrs"))
@@ -132,4 +183,6 @@ def profile_page():
             ui.label("Profile").classes(f"w-full text-xl font-bold p-4 border-b border-[{BORDER}]")
             profile_header()
             edit_name_section()
+            change_password_section()
+            delete_account_section()
             stats_section()
