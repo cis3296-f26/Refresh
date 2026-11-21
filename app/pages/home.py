@@ -7,7 +7,7 @@ from nicegui import ui
 
 from app.components import nav_button, today_indicator
 from app.colors import BLUE, BORDER, MUTED, NEGATIVE, TEXT
-from app.deck_actions import  create_deck_dialog, delete_deck_dialog, import_deck_dialog
+from app.deck_actions import create_deck_dialog, delete_deck_dialog, import_deck_dialog
 from app.card_actions import add_card_dialog
 from app.store import decks, progress, study_days
 from app.streak import current_streak
@@ -87,10 +87,13 @@ def study_dashboard():
             "Keep track of your decks and study progress."
         ).classes(f"text-sm text-[{MUTED}]")
 
-        with ui.grid(columns=2).classes("w-full gap-3"):
+        with ui.grid(columns=2).classes("w-full gap-4"):
 
             # Total decks
-            with ui.card().classes("w-full p-4 gap-2"):
+            with ui.card().classes(
+                f"w-full p-5 gap-3 rounded-xl border border-[{BORDER}] "
+                "shadow-sm hover:shadow-md transition-shadow"
+            ):
                 ui.icon("folder", size="md").classes(
                     f"text-[{BLUE}]"
                 )
@@ -102,7 +105,10 @@ def study_dashboard():
                 )
 
             # Total flashcards
-            with ui.card().classes("w-full p-4 gap-2"):
+            with ui.card().classes(
+                f"w-full p-5 gap-3 rounded-xl border border-[{BORDER}] "
+                "shadow-sm hover:shadow-md transition-shadow"
+            ):
                 ui.icon("style", size="md").classes(
                     f"text-[{BLUE}]"
                 )
@@ -114,7 +120,10 @@ def study_dashboard():
                 )
 
             # Cards studied
-            with ui.card().classes("w-full p-4 gap-2"):
+            with ui.card().classes(
+                f"w-full p-5 gap-3 rounded-xl border border-[{BORDER}] "
+                "shadow-sm hover:shadow-md transition-shadow"
+            ):
                 ui.icon("check_circle", size="md").classes(
                     f"text-[{BLUE}]"
                 )
@@ -126,7 +135,10 @@ def study_dashboard():
                 )
 
             # Daily study streak
-            with ui.card().classes("w-full p-4 gap-2"):
+            with ui.card().classes(
+                f"w-full p-5 gap-3 rounded-xl border border-[{BORDER}] "
+                "shadow-sm hover:shadow-md transition-shadow"
+            ):
                 ui.icon(
                     "local_fire_department", size="md"
                 ).classes(f"text-[{BLUE}]")
@@ -199,8 +211,9 @@ def display_decks(search_text=""):
 
             for deck_name in filtered_decks:
                 with ui.column().classes(
-                    f"w-full p-4 gap-3 rounded-xl "
-                    f"border border-[{BORDER}]"
+                    f"w-full p-5 gap-4 rounded-xl "
+                    f"border border-[{BORDER}] "
+                    "shadow-sm hover:shadow-md transition-shadow"
                 ):
                     ui.label(deck_name).classes(
                         "text-lg font-semibold gap-1"
@@ -211,7 +224,7 @@ def display_decks(search_text=""):
                     ).classes(f"text-sm text-[{MUTED}]")
 
                     today_indicator(decks[deck_name])
-                        
+
                     with ui.row().classes("w-full gap-3 no-wrap"):
 
                         # Primary button: Start studying
@@ -284,8 +297,9 @@ def sidebar():
             lambda: delete_deck_dialog(refresh_dashboard),
         )
 
-        nav_button("Settings", "settings").on("click", lambda: ui.navigate.to("/settings"))
-
+        nav_button("Settings", "settings").on(
+            "click", lambda: ui.navigate.to("/settings")
+        )
 
         nav_button("Profile", "person").on(
             "click",
@@ -293,7 +307,6 @@ def sidebar():
         )
 
         nav_button("Log out", "logout").on("click", log_out)
-
 
         @ui.refreshable
         def show_suggestions(search_text=""):

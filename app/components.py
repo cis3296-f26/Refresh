@@ -5,11 +5,15 @@ from app.progress import progress_fraction, progress_label, today_progress
 
 
 # Flat, left-aligned sidebar button with a hover highlight
+
 def nav_button(label, icon):
-    return ui.button(label, icon=icon).props("flat no-caps align=left dense").classes(
-        f"w-full text-sm font-semibold rounded-full px-3 py-1 text-[{TEXT}] "
-        "hover:bg-[#e7e7e8] [&>.q-btn__content]:justify-start"
+    return ui.button(label, icon=icon).props(
+        "flat no-caps align=left dense"
+    ).classes(
+        f"w-full text-sm font-semibold rounded-lg px-3 py-2 text-[{TEXT}] "
+        "hover:bg-[#eef4ff] [&>.q-btn__content]:justify-start"
     )
+
 
 
 # "X of N cards studied" label with a bar showing how far into the deck the user is
